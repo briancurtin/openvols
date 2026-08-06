@@ -1,0 +1,26 @@
+[project]
+name = "openvols"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Brian Curtin", email = "brian.curtin@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "asyncpg>=0.31.0",
+    "black>=26.5.1",
+    "opentelemetry-distro>=0.65b0",
+    "opentelemetry-instrumentation-fastapi>=0.65b0",
+    "pydantic>=2.13.4",
+    "ruff>=0.16.1",
+    "structlog>=26.1.0",
+    "yoyo-migrations>=9.0.0",
+]
+
+[project.scripts]
+openvols = "openvols:main"
+
+[build-system]
+requires = ["uv_build>=0.12.2,<0.13.0"]
+build-backend = "uv_build"

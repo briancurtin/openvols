@@ -1,2 +1,2 @@
 # openvols
-OpenVols is an open source volunteer management platform
+OpenVols is an open source multi-tenant volunteer management platform
