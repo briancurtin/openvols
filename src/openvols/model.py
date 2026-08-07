@@ -1,0 +1,173 @@
+import pydantic
+
+from datetime import datetime
+import enum
+
+
+class Organization(pydantic.BaseModel):
+    id: str
+    name: str
+    description: str
+    website: str
+    contact: str
+    email: str
+    phone: str
+    private_allowed: bool
+    approved: bool
+
+
+class User(pydantic.BaseModel):
+    """
+    A User is a person with an email address who participates in Opportunities
+
+    Users by default have no role, and one can be assumed if the role is granted
+    on a per-organization basis. For example, a user may be a volunteer for one
+    organization and a manager for another.
+    """
+
+    id: str
+    first_name: str
+    last_name: str
+    email: str
+    email_reminders: bool
+    phone: str
+    phone_reminders: bool
+
+
+class Role(enum.StrEnum):
+    """
+    A Role is a set of permissions granted to a User for an Organization.
+
+    Users default to having no role and no permissions.
+    """
+
+    MANAGER = "manager"
+    ADMIN = "admin"
+    SUPER_ADMIN = "super_admin"
+
+
+class UserRole(pydantic.BaseModel):
+    """
+    A User may have a role for a given Organization
+
+    Users default to having no role and can assume elevated permissions within an Organization
+    if a role is granted for one.
+
+    * Super Admins have access to the entire platform
+    * Admins have access to all data for an Organization and can elevate users to managers,
+      and manage the Organization and its Opportunities and their related objects.
+    * Managers can manage Opportunities and Participants.
+    """
+
+    id: str
+    organization: Organization
+    user: User
+    role: Role
+
+
+class Location(pydantic.BaseModel):
+    id: str
+    organization: Organization
+    name: str
+    address: str
+    city: str
+    state: str
+    postal_code: str
+    country: str
+
+
+class AgreementCadence(enum.StrEnum):
+    """
+    An AgreementCadence represents how often an agreement needs to be accepted.
+
+    - Perpetual agreements are accepted once and do not expire.
+    - Annual agreements must be accepted once per calendar year.
+    - Per Opportunity agreements must be accepted per opportunity.
+    """
+
+    PER_OPPORTUNITY = "per_opportunity"
+    ANNUAL = "annual"
+    PERPETUAL = "perpetual"
+
+
+class Agreement(pydantic.BaseModel):
+    """
+    An Agreement is a document that a User must accept in order to participate in an Opportunity.
+
+    Agreements are immutable, and the Organization is responsibile for its content.
+    An Agreement considered valid from the `valid` date until set at its creation until
+    it's marked as `invalid` by an Organization admin.
+
+    Instead of editing an Agreement, invalidate it and create a new one. This ensures no agreements
+    are modified after a user has accepted them, preserving history of the state at acceptance.
+    """
+
+    id: str
+    organization: Organization
+    title: str
+    description: str
+    content: str
+    valid: datetime
+    invalid: datetime
+    cadence: AgreementCadence
+
+
+class Opportunity(pydantic.BaseModel):
+    """
+    An Opportunity is an event at a location at a set time that users can participate in.
+
+    * `title` is a quick name of the opportunity, which shows up on a list of opportunities
+    * `description` is a longer explanation of the opportunity
+    * `start` and `end` are the times the opportunity is open for participation
+    * `location` is the place where the opportunity takes place
+    * `public` indicates whether the opportunity is visible to all users or only to those
+      with a link
+    * `cancelled` indicates whether the opportunity has been cancelled and is no longer available
+      for participation
+    * `completed` indicates whether the opportunity's date has passed and the event took place
+    * `contact` is the user who is responsible for the opportunity and can be contacted
+      for questions
+    * `capacity` is the maximum number of participants allowed for the opportunity.
+      Users that register for the opportunity will be added as participants but with
+      `approved=False` unless and until an Organization manager approves them.
+    * `auto_approve` indicates whether users that register for the opportunity are automatically
+      approved as participants or require approval by an Organization manager.
+    * `agreements` is a list of agreements that users must accept in order to participate
+      in the opportunity. Each agreement specifies its acceptance cadence.
+    """
+
+    id: str
+    title: str
+    description: str
+    location: Location
+    start: datetime
+    end: datetime
+    public: bool
+    open: bool
+    cancelled: bool
+    completed: bool
+    contact: User
+    capacity: int
+    notes: str
+    auto_approve: bool
+    agreements: list[Agreement]
+
+
+class Participant(pydantic.BaseModel):
+    """
+    A Participant is a User who has registered for an Opportunity.
+
+    * `approved` participants were either auto-approved by the registration engine,
+      or were manually approved by an Organization manager.
+    * `cancelled` is generally set by the user, changing their intent to participate.
+      Updates to `cancelled` trigger registration to see if any approved=false users
+      should be approved to fill the opportunity's capacity.
+    * `attended` tracks whether or not the participant actually attended the opportunity.
+    """
+
+    id: str
+    user: User
+    opportunity: Opportunity
+    approved: bool
+    cancelled: bool
+    attended: bool
