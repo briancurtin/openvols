@@ -1,6 +1,6 @@
 # Systems design
 
-The OpenVols system is comprised of several systems
+The OpenVols platform is comprised of several systems
 
 ## Frontend
 
