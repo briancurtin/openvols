@@ -1,3 +1,12 @@
+# TLA+ TLC counterexamples
+*.tlc
+# TLA+ TLC model checking output
+docs/design/*.out
+docs/design/states/*
+
+# Ignore OSX Finder artifacts
+*.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
