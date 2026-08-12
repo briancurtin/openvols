@@ -7,9 +7,12 @@ CONSTANTS Participants, Capacity
 VARIABLES waitlist, approved
 vars == <<waitlist, approved>>
 
+\* There's no builtin Range. Return a set of all items in the sequence.
+Range(seq) == {seq[i]: i \in 1..Len(seq)}
+
 NotApproved(participant) == participant \notin approved
-NotInWaitlist(participant) == \A u \in 1..Len(waitlist) : waitlist[u] /= participant
-IsWaitlisted(participant) == \E u \in 1..Len(waitlist) : participant = waitlist[u]
+NotInWaitlist(participant) == participant \notin Range(waitlist)
+IsWaitlisted(participant) == participant \in Range(waitlist)
 
 \* They're not approved and not in the waitlist, but we're over capacity to approve
 WaitlistParticipant(participant) ==
@@ -26,9 +29,6 @@ AutoApproveParticipant(participant) ==
     /\ Cardinality(approved) < Capacity
     /\ approved' = approved \union {participant}
     /\ UNCHANGED waitlist
-
-\* There's no builtin Range. Return a set of all items in the sequence.
-Range(seq) == {seq[i]: i \in 1..Len(seq)}
 
 
 StillWaiting(participant) ==
@@ -58,12 +58,12 @@ AutoPromote ==
 \*     /\ waitlist' = waitlist \ {participant}
 
 Next ==
-    \/ UNCHANGED <<waitlist, approved>>
-    \/ \E participant \in Participants :
-            \/ WaitlistParticipant(participant)
-            \/ AutoApproveParticipant(participant)
-            \/ ManuallyPromote
-            \/ AutoPromote
+    \E participant \in Participants :
+        \/ WaitlistParticipant(participant)
+        \/ AutoApproveParticipant(participant)
+        \/ ManuallyPromote
+        \/ AutoPromote
+        \/ UNCHANGED <<waitlist, approved>>
 
 Init ==
     /\ waitlist = <<>>
@@ -81,10 +81,14 @@ TypeInv ==
     \* If the indexes are different it implies that the values are different
     /\ \A i, j \in 1..Len(waitlist) : i /= j => waitlist[i] /= waitlist[j]
 
-ParticipantNotDroppedInv == IF /\ waitlist /= <<>>
-                               /\ Cardinality(approved) > 1
-                            THEN \A participant \in Participants : NotApproved(participant) => IsWaitlisted(participant)
-                            ELSE TRUE
+\* Ensure that we can't have a participant that is both approved and waitlisted
+\* This state won't be possible in the database itself since it's represented
+\* by the approved boolean, but here in the spec or in the application layer
+\* we need to ensure we can't have them on both sides.
+SingleStateInv ==
+    \A participant \in Participants :
+        IsWaitlisted(participant) => NotApproved(participant)
+
 
 Spec == Init /\ [][Next]_vars
 =================================================================
