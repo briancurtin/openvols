@@ -1,4 +1,4 @@
------------------------- MODULE Waitlist ------------------------
+------------------------ MODULE Registration ------------------------
 EXTENDS Naturals, Sequences, FiniteSets
 
 CONSTANTS Participants, Capacity
@@ -59,10 +59,11 @@ AutoPromote ==
 
 Next ==
     \/ UNCHANGED <<waitlist, approved>>
-    \/ \E participant \in Participants : \/ WaitlistParticipant(participant)
-                           \/ AutoApproveParticipant(participant)
-                           \/ ManuallyPromote
-                           \/ AutoPromote
+    \/ \E participant \in Participants :
+            \/ WaitlistParticipant(participant)
+            \/ AutoApproveParticipant(participant)
+            \/ ManuallyPromote
+            \/ AutoPromote
 
 Init ==
     /\ waitlist = <<>>
