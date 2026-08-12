@@ -130,8 +130,12 @@ class Opportunity(pydantic.BaseModel):
     * `capacity` is the maximum number of participants allowed for the opportunity.
       Users that register for the opportunity will be added as participants but with
       `approved=False` unless and until an Organization manager approves them.
-    * `auto_approve` indicates whether users that register for the opportunity are automatically
-      approved as participants or require approval by an Organization manager.
+    * `auto_approve_registrants` indicates whether users that register for the opportunity
+      are automatically approved as participants when there is sufficient capacity,
+      or if they require approval by an Organization manager.
+    * `auto_approve_waiters` indicates whether users that are not approved as participants
+      can be automatically promoted upon cancellation of another participant or expansion of
+      the opportunity's capacity, or if they require approval by an Organization manager.
     * `agreements` is a list of agreements that users must accept in order to participate
       in the opportunity. Each agreement specifies its acceptance cadence.
     """
@@ -149,7 +153,8 @@ class Opportunity(pydantic.BaseModel):
     contact: User
     capacity: int
     notes: str
-    auto_approve: bool
+    auto_approve_registrants: bool
+    auto_approve_waiters: bool
     agreements: list[Agreement]
 
 
