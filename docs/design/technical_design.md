@@ -32,43 +32,43 @@ At a high level, the system includes:
 * Notification service that sends email and SMS reminders
 
 ```mermaid
-architecture-beta
+C4Context
+    title System Context diagram for OpenVols
+    Boundary(outer_boundary, "") {
+      Person(user_existing, "Existing User", "A registered user")
+      Person(user_new, "User")
+      System(frontend, "Browser UI", "React App")
 
-    group saas(cloud)[Hosted SaaS Services]
-        service postgres(database)[Postgres] in saas
-        service observability(database)[Observability] in saas
+      Boundary(deployment, "OpenVols deployment") {
+        System(api, "REST API", "FastAPI service")
+        System(notifications, "Notifications", "Email & SMS")
+        System(otel_collector, "OTel Collector", "Metrics & Traces")
+      }
+    }
+    Boundary(hosted_saas_providers, "SaaS Providers", "Vendors TBD, abstracted in OV") {
+      SystemDb_Ext(hosted_database, "Postgres")
+      SystemDb_Ext(hosted_observability, "Observability")
+      System_Ext(hosted_email, "Email provider")
+      System_Ext(hosted_sms, "SMS provider")
+    }
 
-    group openvols(cloud)[OpenVols Platform]
-        service frontend(internet)[UI] in openvols
-        service loadbalancer(server)[Load Balancer] in openvols
-        service api_node0(server)[API] in openvols
-        service api_node1(server)[API] in openvols
-        service collector(server)[OTel Collector] in openvols
-        service scheduler(server)[Scheduler] in openvols
-        service notifications(server)[Notifications] in openvols
+    BiRel(user_existing, frontend, "")
+    BiRel(user_new, frontend, "")
+    BiRel(frontend, api, "REST APIs")
 
-    frontend:B <--> T:loadbalancer
-    align column frontend loadbalancer
+    Rel(api, hosted_email, "", "Sends immediate emails")
+    BiRel(api, hosted_database, "Platform state")
+    Rel(api, otel_collector, "o11y data")
 
-    align row scheduler loadbalancer
+    BiRel(notifications, hosted_database, "Platform state")
+    Rel(notifications, hosted_email, "", "Sends scheduled emails")
+    Rel(notifications, hosted_sms, "Sends SMS")
+    Rel(notifications, otel_collector, "o11y data")
 
-    scheduler:B --> T:notifications
-    align column scheduler notifications
+    Rel(otel_collector, hosted_observability, "Observability")
 
-    loadbalancer:B --> T:api_node0
-    loadbalancer:B --> T:api_node1
-    align row api_node0 api_node1
-    align column api_node0 collector
-
-    api_node0:B --> T:collector
-    api_node1:B --> T:collector
-    notifications:B --> T:collector
-    collector:B --> T: observability
-    align column collector observability
-
-    postgres:T <--> B:notifications
-    postgres:T <--> B:api_node0
-    postgres:T <--> B:api_node1
+    UpdateElementStyle(otel_collector, $fontColor="black", $bgColor="grey")
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ```
 
 ### UI
@@ -81,50 +81,86 @@ coming into with as much thought as the backend.
 
 ### REST API
 
-The REST API service will run on [FastAPI](https://fastapi.tiangolo.com/).
+The REST API will be served by [FastAPI](https://fastapi.tiangolo.com/).
 
 A few high level ideas:
 * All authentication will be passwordless via "magic link" emails,
-  authorization via roles that authenticated users can assume.
+  with authorization via roles that authenticated users can assume.
 * Strict separation between REST layer and business logic. No code in the REST
   layer that isn't about HTTP.
 * Use [Pydantic](https://pydantic.dev/docs/validation/latest/get-started/) models
 * Use [OpenTelemetry](https://opentelemetry.io/docs/languages/python/)
   for metrics and tracing.
-    * The hosted deployment will likely use [Grafana's OTel support](https://grafana.com/docs/opentelemetry/).
-* Use [structlog](https://www.structlog.org/en/stable/index.html) with
-  [the OTel SDK](https://www.structlog.org/en/stable/frameworks.html#opentelemetry)
-  to correlate logs with traces.
+  * Use [structlog](https://www.structlog.org/en/stable/index.html) with
+    [the OTel SDK](https://www.structlog.org/en/stable/frameworks.html#opentelemetry)
+    to correlate logs with traces.
 
 Most APIs here are CRUD operations without much or any logic. Add a location,
-update a title, etc. One operations requires more logic: the waitlist.
+update a title, etc. One operations requires more logic: registration and the waitlist.
 
-#### Waitlist engine
+#### Registration engine
 
-The main feature of this platform is transitioning users to participants; the rest
-is mostly CRUD. The likelihood of multiple concurrent approvals, especially
-conflicting approvals, is infinitesimally small for this site. The stakes of
-getting things wrong, such as allowing an extra participant, are pretty low
-in my experience. However, that's not how everyone views it, and limits are limits
-for a reason. It's a good thing to get right, and a nice exercise in building
-good software. We can do this safely, so we should explore it.
+The main feature of this platform is transitioning interested volunteer users
+to registered participants. This will happen inside the core of the REST API.
 
+See [Registration.tla](./Registration.tla) for a TLA+ specification of how the
+registration approval and waitlist system is designed.
+
+> A quick aside about the _why_...
+>
+> The likelihood of multiple concurrent registrations and approvals, especially
+> conflicting ones, is infinitesimally small for this platform. At the same time,
+> the stakes of getting things wrong, such as allowing an extra participant,
+> are pretty low in my experience.
+>
+> Keeping things simple and accepting those outcomes are normally a pretty good
+> tradeoff in a business sense for something as low risk as this. Managing
+> complexity is the name of the game, and adding to it unneccessarily can bring
+> a lot of pain. At the same time, I'm unemployed as I'm writing this,
+> I want to replace a similar system I built as a one-off (https://frtrails.org),
+> and I want to learn a few things with this project. Making this more robust
+> than it needs to be is a tradeoff that'll benefit myself and the users
+> at some point. Plus, it's a fun side-project after all :)
+
+In plain English, we'll be using one database table and identifying users as
+**approved** or **waitlisted** in code based on their `approved` value. It's roughly
+how any other waitlist works—just being explicit up front to ensure people and tools
+are on the same page.
 * When a user registers their participation and `capacity > 0`, they are `approved = true`
 * When a user registers their participation and `capacity == 0`, they are `approved = false`,
   aka waitlisted.
-  * When the capacity of the event rises above the count of `approved = true` participants,
-    participants can be added if the count is less or equal to the new open capacity.
-    * This may happen due to a user canceling their participation, or by updating
-      the event's capacity. Both must trigger evaluation of the wait list.
+* When the capacity of the opportunity rises above the count of `approved = true` participants,
+  participants can be added if the count is less or equal to the new open capacity.
+  This may happen due to a user canceling their participation, or by updating
+  the event's capacity. Both must trigger evaluation of the wait list.
 * It must be impossible to have `capacity < 0`
 
 ### Notifications
 
+The notification system is a periodic service that finds scheduled
+notifications to be sent to participants, such as email reminders for an
+upcoming opportunity. The service doesn't need to be running at all times
+because reminders don't need to be sent at all times, so a `cron` inspired
+design is sufficient. This way deployment can happen via something like
+[AWS EventBridge + Lambda](https://docs.aws.amazon.com/lambda/latest/dg/with-eventbridge-scheduler.html),
+or our likely choice of Fly.io [Cron Manager](https://fly.io/docs/blueprints/task-scheduling/).
+
+
 ## Data model
 
 ```mermaid
+treeView-beta
+my-project/
+  src/
+      components/
+          Button.tsx
+          Header.tsx
+      App.tsx
+      index.js
+  .gitignore
+  package.json
+  README.md
 ```
-
 ## REST API
 
 ## Observability
