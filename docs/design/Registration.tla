@@ -30,39 +30,10 @@ AutoApproveParticipant(participant) ==
     /\ approved' = approved \union {participant}
     /\ UNCHANGED waitlist
 
-
-StillWaiting(participant) ==
-{i \in 1..Len(waitlist) : waitlist[i] /= participant}
-
-\* Pick a specific user from the waitlist and promote them
-ManuallyPromote ==
-    /\ waitlist /= <<>>
-    /\ Cardinality(approved) < Capacity
-    /\ \E participant \in Range(waitlist) :
-       /\ approved' = approved \union {participant}
-       /\ waitlist' = {u \in waitlist : u /= participant}
-
-\* Take the next user from the list and promote
-AutoPromote ==
-    /\ waitlist /= <<>>
-    /\ Cardinality(approved) < Capacity
-    /\ LET participant == Head(waitlist)
-        IN  /\ approved' = approved \union {participant}
-            /\ waitlist' = Tail(waitlist)
-
-
-\* CancelParticipation(participant) ==
-\*     /\ \/ participant \in approved
-\*        \/ \E u \in 1..Len(waitlist) : participant = waitlist[u]
-\*     /\ approved' = approved \ {participant}
-\*     /\ waitlist' = waitlist \ {participant}
-
 Next ==
     \E participant \in Participants :
         \/ WaitlistParticipant(participant)
         \/ AutoApproveParticipant(participant)
-        \/ ManuallyPromote
-        \/ AutoPromote
         \/ UNCHANGED <<waitlist, approved>>
 
 Init ==
