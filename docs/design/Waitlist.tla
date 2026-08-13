@@ -27,7 +27,8 @@ ManuallyPromote ==
     /\ Cardinality(approved) < Capacity
     /\ \E participant \in Range(waitlist) :
        /\ approved' = approved \union {participant}
-       /\ waitlist' = {u \in waitlist : u /= participant}
+       \* TODO: This needs to be a Sequence, not a Set
+       /\ waitlist' = {u \in Range(waitlist) : u /= participant}
 
 \* Take the next user from the list and promote
 AutoPromote ==
@@ -40,13 +41,13 @@ AutoPromote ==
 Next ==
     \E participant \in Participants :
         \/ CancelParticipant(participant)
-            \* /\ \/ ManuallyPromote
-            \*    \/ AutoPromote
+        \/ AutoPromote
+        \* \/ ManuallyPromote
         \/ UNCHANGED <<waitlist, approved>>
 
 Init ==
     /\ waitlist = <<4>>
-    /\ approved = {}
+    /\ approved = {1, 2, 3}
 
 \* waitlist is a sequence, not a set, because we currently need random choice promotion
 \* Promotion can be automatic, taking Head(waitlist), or manual, taking a random user
@@ -54,7 +55,7 @@ Init ==
 \* something like a priority queue so automatic promotion can be smarter than just FIFO.
 TypeInv ==
     /\ waitlist \in Seq(Waitlist)
-    /\ approved \in SUBSET Participants
+    /\ approved \in SUBSET (Participants \union Waitlist)
     /\ Cardinality(approved) <= Capacity
     \* Uniqueness check to ensure no two waitlist items are the same
     \* If the indexes are different it implies that the values are different
