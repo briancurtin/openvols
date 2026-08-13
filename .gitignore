@@ -15,6 +15,11 @@ __pycache__/
 # C extensions
 *.so
 
+# TLA+ TLC counterexamples
+*.tlc
+# TLA+ TLC model checking output
+docs/design/*.out
+
 # Distribution / packaging
 .Python
 build/
