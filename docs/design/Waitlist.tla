@@ -1,11 +1,13 @@
------------------------- MODULE Registration ------------------------
+------------------------ MODULE Waitlist ------------------------
 EXTENDS Naturals, Sequences, FiniteSets
 
-CONSTANTS Participants, Capacity
+CONSTANTS Participants, Waitlist, Capacity
 \* In the system, waitlist is a pseudonym for participants of an opportunity
 \* who are approved=false. Approved users here are approved=true in the database.
 VARIABLES waitlist, approved
 vars == <<waitlist, approved>>
+
+ASSUME Cardinality(Waitlist) >= 1
 
 \* There's no builtin Range. Return a set of all items in the sequence.
 Range(seq) == {seq[i]: i \in 1..Len(seq)}
@@ -14,39 +16,46 @@ NotApproved(participant) == participant \notin approved
 NotInWaitlist(participant) == participant \notin Range(waitlist)
 IsWaitlisted(participant) == participant \in Range(waitlist)
 
-\* They're not approved and not in the waitlist, but we're over capacity to approve
-WaitlistParticipant(participant) ==
-    /\ NotApproved(participant)
-    /\ NotInWaitlist(participant)
-    /\ Cardinality(approved) >= Capacity
-    /\ waitlist' = Append(waitlist, participant)
-    /\ UNCHANGED approved
-
-\* They're not approved and not in the wait list, and there's capacity to approve
-AutoApproveParticipant(participant) ==
-    /\ NotApproved(participant)
-    /\ NotInWaitlist(participant)
-    /\ Cardinality(approved) < Capacity
-    /\ approved' = approved \union {participant}
+CancelParticipant(participant) ==
+    /\ participant \in approved
+    /\ approved' = approved \ {participant}
     /\ UNCHANGED waitlist
+
+\* Pick a specific user from the waitlist and promote them
+ManuallyPromote ==
+    /\ waitlist /= <<>>
+    /\ Cardinality(approved) < Capacity
+    /\ \E participant \in Range(waitlist) :
+       /\ approved' = approved \union {participant}
+       \* TODO: This needs to be a Sequence, not a Set
+       /\ waitlist' = {u \in Range(waitlist) : u /= participant}
+
+\* Take the next user from the list and promote
+AutoPromote ==
+    /\ waitlist /= <<>>
+    /\ Cardinality(approved) < Capacity
+    /\ LET participant == Head(waitlist)
+        IN  /\ approved' = approved \union {participant}
+            /\ waitlist' = Tail(waitlist)
 
 Next ==
     \E participant \in Participants :
-        \/ WaitlistParticipant(participant)
-        \/ AutoApproveParticipant(participant)
+        \/ CancelParticipant(participant)
+        \/ AutoPromote
+        \* \/ ManuallyPromote
         \/ UNCHANGED <<waitlist, approved>>
 
 Init ==
-    /\ waitlist = <<>>
-    /\ approved = {}
+    /\ waitlist = <<4>>
+    /\ approved = {1, 2, 3}
 
 \* waitlist is a sequence, not a set, because we currently need random choice promotion
 \* Promotion can be automatic, taking Head(waitlist), or manual, taking a random user
 \* (in reality it's a manager picking a specific user). It may eventually expand to use
 \* something like a priority queue so automatic promotion can be smarter than just FIFO.
 TypeInv ==
-    /\ waitlist \in Seq(Participants)
-    /\ approved \in SUBSET Participants
+    /\ waitlist \in Seq(Waitlist)
+    /\ approved \in SUBSET (Participants \union Waitlist)
     /\ Cardinality(approved) <= Capacity
     \* Uniqueness check to ensure no two waitlist items are the same
     \* If the indexes are different it implies that the values are different
