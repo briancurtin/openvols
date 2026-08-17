@@ -103,8 +103,8 @@ update a title, etc. One operations requires more logic: registration and the wa
 The main feature of this platform is transitioning interested volunteer users
 to registered participants. This will happen inside the core of the REST API.
 
-See [Registration.tla](./Registration.tla) for a TLA+ specification of how the
-registration approval and waitlist system is designed.
+See [Registration.tla](../../specs/Registration.tla) and [Waitlist.tla](../../specs/Waitlist.tla)
+for TLA+ specifications of how the registration system is designed.
 
 > A quick aside about the _why_...
 >
@@ -145,7 +145,6 @@ design is sufficient. This way deployment can happen via something like
 [AWS EventBridge + Lambda](https://docs.aws.amazon.com/lambda/latest/dg/with-eventbridge-scheduler.html),
 or our likely choice of Fly.io [Cron Manager](https://fly.io/docs/blueprints/task-scheduling/).
 
-
 ## Data model
 
 ```mermaid
@@ -162,6 +161,37 @@ my-project/
   README.md
 ```
 ## REST API
+
+### Authentication & Authorization
+
+#### POST /auth/login
+login
+
+#### POST /auth/roles
+List the roles available to the authenticated user
+
+#### POST /auth/assume
+Assume the given role
+
+### Organizations
+
+#### POST /organizations
+Create org
+
+#### GET /organizations
+List orgs
+
+#### GET /organizations/{id}
+Get single org
+
+#### PATCH /organizations/{id}
+Update an org, such as approving it
+
+### Users
+
+### Opportunities
+
+
 
 ## Observability
 
