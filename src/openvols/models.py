@@ -28,6 +28,14 @@ class USPhoneNumber(PhoneNumber):
     phone_format = "NATIONAL"
 
 
+class StoredModel(pydantic.BaseModel):
+    """An object that exists in the database"""
+
+    id: str = ""
+    created: datetime | None = None
+    updated: datetime | None = None
+
+
 class Organization(pydantic.BaseModel):
     """An organization to create. Requires approval."""
 
@@ -39,6 +47,10 @@ class Organization(pydantic.BaseModel):
     phone: USPhoneNumber
     private_allowed: bool
     approved: bool
+
+
+class StoredOrganization(StoredModel, Organization):
+    """An Organization in the data layer"""
 
 
 class User(pydantic.BaseModel):
@@ -56,6 +68,10 @@ class User(pydantic.BaseModel):
     email_reminders: bool
     phone: str
     phone_reminders: bool
+
+
+class StoredUser(StoredModel, User):
+    """A User in the data layer"""
 
 
 class RoleType(enum.Enum):
@@ -85,6 +101,10 @@ class Role(pydantic.BaseModel):
     type: RoleType
 
 
+class StoredRole(StoredModel, Role):
+    """A Role in the data layer"""
+
+
 class Location(pydantic.BaseModel):
     """
     A Location is the place where an Opportunity will take place
@@ -97,6 +117,10 @@ class Location(pydantic.BaseModel):
     state: str
     postal_code: str
     country: str
+
+
+class StoredLocation(StoredModel, Location):
+    """A Location in the data layer"""
 
 
 class AgreementCadence(enum.StrEnum):
@@ -132,6 +156,10 @@ class Agreement(pydantic.BaseModel):
     valid: datetime
     invalid: datetime
     cadence: AgreementCadence
+
+
+class StoredAgreement(StoredModel, Agreement):
+    """An Agreement in the data layer"""
 
 
 class Opportunity(pydantic.BaseModel):
@@ -179,6 +207,10 @@ class Opportunity(pydantic.BaseModel):
     agreements: list[Agreement] = pydantic.Field(default_factory=list)
 
 
+class StoredOpportunity(StoredModel, Opportunity):
+    """An Opportunity in the data layer"""
+
+
 class Participant(pydantic.BaseModel):
     """
     A Participant is a User who has registered for an Opportunity.
@@ -196,3 +228,7 @@ class Participant(pydantic.BaseModel):
     approved: bool
     cancelled: bool
     attended: bool
+
+
+class StoredParticipant(StoredModel, Participant):
+    """A Participant in the data layer"""
