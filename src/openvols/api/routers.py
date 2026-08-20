@@ -3,7 +3,9 @@ import typing
 import fastapi
 import pydantic
 
-app = fastapi.FastAPI()
+import openvols.models
+
+app = fastapi.FastAPI(title="OpenVols API")
 
 
 class LoginEmail(pydantic.BaseModel):
