@@ -84,8 +84,8 @@ coming into with as much thought as the backend.
 The REST API will be served by [FastAPI](https://fastapi.tiangolo.com/).
 
 A few high level ideas:
-* All authentication will be passwordless via "magic link" emails,
-  with authorization via roles that authenticated users can assume.
+* Authentication will be passwordless via "magic link" emails, or API keys.
+* Authorization is controlled via roles that authenticated users can assume.
 * Strict separation between REST layer and business logic. No code in the REST
   layer that isn't about HTTP.
 * Use [Pydantic](https://pydantic.dev/docs/validation/latest/get-started/) models
@@ -162,35 +162,11 @@ my-project/
 ```
 ## REST API
 
-### Authentication & Authorization
+### Versioning
 
-#### POST /auth/login
-login
-
-#### POST /auth/roles
-List the roles available to the authenticated user
-
-#### POST /auth/assume
-Assume the given role
-
-### Organizations
-
-#### POST /organizations
-Create org
-
-#### GET /organizations
-List orgs
-
-#### GET /organizations/{id}
-Get single org
-
-#### PATCH /organizations/{id}
-Update an org, such as approving it
-
-### Users
-
-### Opportunities
-
+API versioning is handled through the `X-OpenVols-API-Version` header,
+which defaults to the latest if not set. The versioning scheme is date-based,
+using `YYYY-MM-DD` format, such as `2026-08-17`.
 
 
 ## Observability
