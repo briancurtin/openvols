@@ -17,9 +17,10 @@ def client():
 
 
 # ---- Payload fixtures ------------------------------------------------------
-# Each fixture returns a dict shaped like the corresponding request model.
-# Fixtures that nest another model (e.g. a Role's organization/user) depend on
-# the fixture for that model instead of duplicating its fields.
+# Each *_body fixture returns a dict shaped like the corresponding request
+# model. Models reference other aggregates by id (see models.py), so fixtures
+# that need one (e.g. a Role's organization_id/user_id) create the referenced
+# resource through the API first via an *_id fixture.
 
 
 @pytest.fixture
@@ -37,6 +38,11 @@ def organization_body():
 
 
 @pytest.fixture
+def organization_id(client, organization_body):
+    return client.post("/api/organizations", json={"body": organization_body}).json()["id"]
+
+
+@pytest.fixture
 def user_body():
     return {
         "first_name": "Jane",
@@ -49,14 +55,19 @@ def user_body():
 
 
 @pytest.fixture
-def role_body(organization_body, user_body):
-    return {"organization": organization_body, "user": user_body, "type": 0}
+def user_id(client, user_body):
+    return client.post("/api/users", json={"body": user_body}).json()["id"]
 
 
 @pytest.fixture
-def location_body(organization_body):
+def role_body(organization_id, user_id):
+    return {"organization_id": organization_id, "user_id": user_id, "type": 0}
+
+
+@pytest.fixture
+def location_body(organization_id):
     return {
-        "organization": organization_body,
+        "organization_id": organization_id,
         "name": "Community Center",
         "address": "123 Main St",
         "city": "Springfield",
@@ -67,9 +78,14 @@ def location_body(organization_body):
 
 
 @pytest.fixture
-def agreement_body(organization_body):
+def location_id(client, location_body):
+    return client.post("/api/locations", json={"body": location_body}).json()["id"]
+
+
+@pytest.fixture
+def agreement_body(organization_id):
     return {
-        "organization": organization_body,
+        "organization_id": organization_id,
         "title": "Volunteer Waiver",
         "description": "Standard liability waiver",
         "content": "By participating you agree to the terms.",
@@ -80,18 +96,18 @@ def agreement_body(organization_body):
 
 
 @pytest.fixture
-def opportunity_body(location_body, user_body):
+def opportunity_body(location_id, user_id):
     return {
         "title": "Park Cleanup",
         "description": "Help clean up the park",
-        "location": location_body,
+        "location_id": location_id,
         "start": "2026-06-01T09:00:00Z",
         "end": "2026-06-01T12:00:00Z",
         "public": True,
         "open": True,
         "cancelled": False,
         "completed": False,
-        "contact": user_body,
+        "contact_id": user_id,
         "capacity": 10,
         "notes": "",
         "auto_approve_registrants": True,

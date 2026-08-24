@@ -96,8 +96,8 @@ class Role(pydantic.BaseModel):
     * Managers can manage Opportunities and Participants.
     """
 
-    organization: Organization
-    user: User
+    organization_id: str
+    user_id: str
     type: RoleType
 
 
@@ -110,7 +110,7 @@ class Location(pydantic.BaseModel):
     A Location is the place where an Opportunity will take place
     """
 
-    organization: Organization
+    organization_id: str
     name: str
     address: str
     city: str
@@ -149,7 +149,7 @@ class Agreement(pydantic.BaseModel):
     are modified after a user has accepted them, preserving history of the state at acceptance.
     """
 
-    organization: Organization
+    organization_id: str
     title: str
     description: str
     content: str
@@ -169,13 +169,13 @@ class Opportunity(pydantic.BaseModel):
     * `title` is a quick name of the opportunity, which shows up on a list of opportunities
     * `description` is a longer explanation of the opportunity
     * `start` and `end` are the times the opportunity is open for participation
-    * `location` is the place where the opportunity takes place
+    * `location_id` is the place where the opportunity takes place
     * `public` indicates whether the opportunity is visible to all users or only to those
       with a link
     * `cancelled` indicates whether the opportunity has been cancelled and is no longer available
       for participation
     * `completed` indicates whether the opportunity's date has passed and the event took place
-    * `contact` is the user who is responsible for the opportunity and can be contacted
+    * `contact_id` is the user who is responsible for the opportunity and can be contacted
       for questions
     * `capacity` is the maximum number of participants allowed for the opportunity.
       Users that register for the opportunity will be added as participants but with
@@ -186,25 +186,25 @@ class Opportunity(pydantic.BaseModel):
     * `auto_approve_waiters` indicates whether users that are not approved as participants
       can be automatically promoted upon cancellation of another participant or expansion of
       the opportunity's capacity, or if they require approval by an Organization manager.
-    * `agreements` is a list of agreements that users must accept in order to participate
-      in the opportunity. Each agreement specifies its acceptance cadence.
+    * `agreement_ids` are the agreements that users must accept in order to participate
+      in the opportunity. Each agreement specifies its own acceptance cadence.
     """
 
     title: str
     description: str
-    location: Location
+    location_id: str
     start: datetime
     end: datetime
     public: bool
     open: bool
     cancelled: bool
     completed: bool
-    contact: User
+    contact_id: str
     capacity: int
     notes: str
     auto_approve_registrants: bool
     auto_approve_waiters: bool
-    agreements: list[Agreement] = pydantic.Field(default_factory=list)
+    agreement_ids: list[str] = pydantic.Field(default_factory=list)
 
 
 class StoredOpportunity(StoredModel, Opportunity):
@@ -223,8 +223,8 @@ class Participant(pydantic.BaseModel):
     * `attended` tracks whether or not the participant actually attended the opportunity.
     """
 
-    user: User
-    opportunity: Opportunity
+    user_id: str
+    opportunity_id: str
     approved: bool
     cancelled: bool
     attended: bool

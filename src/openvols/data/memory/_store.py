@@ -18,7 +18,7 @@ from openvols import data, models
 
 
 class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
-    """Shared CRUD for the aggregates that don't need registration-engine logic."""
+    """Shared CRUD for the aggregates that don't need extra validation or engine logic."""
 
     def __init__(self, stored_cls: type[StoredT]):
         self._stored_cls = stored_cls
@@ -57,15 +57,99 @@ class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseMode
         del self._items[id]
 
 
+class _RoleRepository:
+    """Plain CRUD, plus validating that organization_id/user_id reference real records."""
+
+    def __init__(
+        self,
+        organizations: _InMemoryRepository[models.StoredOrganization, models.Organization],
+        users: _InMemoryRepository[models.StoredUser, models.User],
+    ):
+        self._repository = _InMemoryRepository(models.StoredRole)
+        self._organizations = organizations
+        self._users = users
+
+    async def _validate(self, item: models.Role) -> None:
+        await self._organizations.get(item.organization_id)
+        await self._users.get(item.user_id)
+
+    async def create(self, item: models.Role) -> models.StoredRole:
+        await self._validate(item)
+        return await self._repository.create(item)
+
+    async def get(self, id: str) -> models.StoredRole:
+        return await self._repository.get(id)
+
+    async def list(self) -> list[models.StoredRole]:
+        return await self._repository.list()
+
+    async def update(self, id: str, item: models.Role) -> models.StoredRole:
+        await self._validate(item)
+        return await self._repository.update(id, item)
+
+    async def delete(self, id: str) -> None:
+        await self._repository.delete(id)
+
+
+class _LocationRepository:
+    """Plain CRUD, plus validating that organization_id references a real Organization."""
+
+    def __init__(
+        self, organizations: _InMemoryRepository[models.StoredOrganization, models.Organization]
+    ):
+        self._repository = _InMemoryRepository(models.StoredLocation)
+        self._organizations = organizations
+
+    async def create(self, item: models.Location) -> models.StoredLocation:
+        await self._organizations.get(item.organization_id)
+        return await self._repository.create(item)
+
+    async def get(self, id: str) -> models.StoredLocation:
+        return await self._repository.get(id)
+
+    async def list(self) -> list[models.StoredLocation]:
+        return await self._repository.list()
+
+    async def update(self, id: str, item: models.Location) -> models.StoredLocation:
+        await self._organizations.get(item.organization_id)
+        return await self._repository.update(id, item)
+
+    async def delete(self, id: str) -> None:
+        await self._repository.delete(id)
+
+
+class _AgreementRepository:
+    """Plain CRUD, plus validating that organization_id references a real Organization."""
+
+    def __init__(
+        self, organizations: _InMemoryRepository[models.StoredOrganization, models.Organization]
+    ):
+        self._repository = _InMemoryRepository(models.StoredAgreement)
+        self._organizations = organizations
+
+    async def create(self, item: models.Agreement) -> models.StoredAgreement:
+        await self._organizations.get(item.organization_id)
+        return await self._repository.create(item)
+
+    async def get(self, id: str) -> models.StoredAgreement:
+        return await self._repository.get(id)
+
+    async def list(self) -> list[models.StoredAgreement]:
+        return await self._repository.list()
+
+    async def update(self, id: str, item: models.Agreement) -> models.StoredAgreement:
+        await self._organizations.get(item.organization_id)
+        return await self._repository.update(id, item)
+
+    async def delete(self, id: str) -> None:
+        await self._repository.delete(id)
+
+
 class _ParticipantRepository:
     """
     Owns the registration engine: deciding approved vs. waitlisted on
     register(), and promoting waitlisted participants FIFO when capacity
     opens up via cancel() or an opportunity update.
-
-    StoredParticipant embeds full User/Opportunity snapshots rather than
-    ids (see openvols.models), so a separate id index is kept internally to
-    know which opportunity each participant belongs to.
     """
 
     def __init__(
@@ -76,7 +160,6 @@ class _ParticipantRepository:
         self._opportunities = opportunities
         self._users = users
         self._items: dict[str, models.StoredParticipant] = {}
-        self._opportunity_id_by_participant: dict[str, str] = {}
 
     async def get(self, id: str) -> models.StoredParticipant:
         try:
@@ -101,27 +184,35 @@ class _ParticipantRepository:
     async def delete(self, id: str) -> None:
         await self.get(id)
         del self._items[id]
-        del self._opportunity_id_by_participant[id]
 
     async def register(self, user_id: str, opportunity_id: str) -> models.StoredParticipant:
-        user = await self._users.get(user_id)
+        await self._users.get(user_id)
         opportunity = await self._opportunities.get(opportunity_id)
-        now = datetime.datetime.now(datetime.UTC)
 
+        # A user can re-register after cancelling, so only an active
+        # (non-cancelled) registration for this pair counts as a duplicate.
+        for participant in self._items.values():
+            if (
+                participant.user_id == user_id
+                and participant.opportunity_id == opportunity_id
+                and not participant.cancelled
+            ):
+                raise data.ConflictError(
+                    f"user {user_id!r} is already registered for opportunity {opportunity_id!r}"
+                )
+
+        now = datetime.datetime.now(datetime.UTC)
         participant = models.StoredParticipant(
             id=str(uuid.uuid4()),
             created=now,
             updated=now,
-            user=models.User(**user.model_dump(exclude={"id", "created", "updated"})),
-            opportunity=models.Opportunity(
-                **opportunity.model_dump(exclude={"id", "created", "updated"})
-            ),
+            user_id=user_id,
+            opportunity_id=opportunity_id,
             approved=self._approved_count(opportunity_id) < opportunity.capacity,
             cancelled=False,
             attended=False,
         )
         self._items[participant.id] = participant
-        self._opportunity_id_by_participant[participant.id] = opportunity_id
         return participant
 
     async def cancel(self, participant_id: str) -> None:
@@ -129,13 +220,12 @@ class _ParticipantRepository:
         if participant.cancelled:
             return
 
-        opportunity_id = self._opportunity_id_by_participant[participant_id]
         was_approved = participant.approved
         self._items[participant_id] = participant.model_copy(
             update={"cancelled": True, "updated": datetime.datetime.now(datetime.UTC)}
         )
         if was_approved:
-            await self.promote_waitlist(opportunity_id)
+            await self.promote_waitlist(participant.opportunity_id)
 
     async def promote_waitlist(self, opportunity_id: str) -> None:
         """
@@ -150,13 +240,11 @@ class _ParticipantRepository:
 
         now = datetime.datetime.now(datetime.UTC)
         # dict preserves insertion order, so this walk is already FIFO.
-        registrations = self._opportunity_id_by_participant.items()
-        for participant_id, associated_opportunity_id in registrations:
+        for participant_id, participant in self._items.items():
             if open_slots <= 0:
                 break
-            if associated_opportunity_id != opportunity_id:
+            if participant.opportunity_id != opportunity_id:
                 continue
-            participant = self._items[participant_id]
             if participant.cancelled or participant.approved:
                 continue
             self._items[participant_id] = participant.model_copy(
@@ -165,28 +253,43 @@ class _ParticipantRepository:
             open_slots -= 1
 
     def _approved_count(self, opportunity_id: str) -> int:
-        registrations = self._opportunity_id_by_participant.items()
         return sum(
             1
-            for participant_id, associated_opportunity_id in registrations
-            if associated_opportunity_id == opportunity_id
-            and not self._items[participant_id].cancelled
-            and self._items[participant_id].approved
+            for participant in self._items.values()
+            if participant.opportunity_id == opportunity_id
+            and not participant.cancelled
+            and participant.approved
         )
 
 
 class _OpportunityRepository:
-    """Wraps generic CRUD for Opportunities, adding waitlist promotion on update()."""
+    """
+    Plain CRUD, validating that location_id/contact_id/agreement_ids reference
+    real records, plus triggering waitlist promotion on update().
+    """
 
     def __init__(
         self,
         repository: _InMemoryRepository[models.StoredOpportunity, models.Opportunity],
+        locations: _InMemoryRepository[models.StoredLocation, models.Location],
+        users: _InMemoryRepository[models.StoredUser, models.User],
+        agreements: _InMemoryRepository[models.StoredAgreement, models.Agreement],
         participants: _ParticipantRepository,
     ):
         self._repository = repository
+        self._locations = locations
+        self._users = users
+        self._agreements = agreements
         self._participants = participants
 
+    async def _validate(self, item: models.Opportunity) -> None:
+        await self._locations.get(item.location_id)
+        await self._users.get(item.contact_id)
+        for agreement_id in item.agreement_ids:
+            await self._agreements.get(agreement_id)
+
     async def create(self, item: models.Opportunity) -> models.StoredOpportunity:
+        await self._validate(item)
         return await self._repository.create(item)
 
     async def get(self, id: str) -> models.StoredOpportunity:
@@ -196,6 +299,7 @@ class _OpportunityRepository:
         return await self._repository.list()
 
     async def update(self, id: str, item: models.Opportunity) -> models.StoredOpportunity:
+        await self._validate(item)
         updated = await self._repository.update(id, item)
         await self._participants.promote_waitlist(id)
         return updated
@@ -215,16 +319,19 @@ class MemoryStore:
             models.StoredOrganization
         )
         self.users: data.UserRepository = _InMemoryRepository(models.StoredUser)
-        self.roles: data.RoleRepository = _InMemoryRepository(models.StoredRole)
-        self.locations: data.LocationRepository = _InMemoryRepository(models.StoredLocation)
-        self.agreements: data.AgreementRepository = _InMemoryRepository(models.StoredAgreement)
+        self.roles: data.RoleRepository = _RoleRepository(self.organizations, self.users)
+        self.locations: data.LocationRepository = _LocationRepository(self.organizations)
+        self.agreements: data.AgreementRepository = _AgreementRepository(self.organizations)
 
+        # Shared by both repositories below so a capacity change made through
+        # opportunities.update() is immediately visible to the registration
+        # engine's capacity lookups in participants.register()/promote_waitlist().
         opportunities = _InMemoryRepository(models.StoredOpportunity)
         self.participants: data.ParticipantRepository = _ParticipantRepository(
             opportunities, self.users
         )
         self.opportunities: data.OpportunityRepository = _OpportunityRepository(
-            opportunities, self.participants
+            opportunities, self.locations, self.users, self.agreements, self.participants
         )
 
     async def __aenter__(self) -> Self:

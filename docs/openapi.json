@@ -1347,8 +1347,9 @@
     "schemas": {
       "Agreement": {
         "properties": {
-          "organization": {
-            "$ref": "#/components/schemas/Organization"
+          "organization_id": {
+            "type": "string",
+            "title": "Organization Id"
           },
           "title": {
             "type": "string",
@@ -1378,7 +1379,7 @@
         },
         "type": "object",
         "required": [
-          "organization",
+          "organization_id",
           "title",
           "description",
           "content",
@@ -1693,8 +1694,9 @@
       },
       "Location": {
         "properties": {
-          "organization": {
-            "$ref": "#/components/schemas/Organization"
+          "organization_id": {
+            "type": "string",
+            "title": "Organization Id"
           },
           "name": {
             "type": "string",
@@ -1723,7 +1725,7 @@
         },
         "type": "object",
         "required": [
-          "organization",
+          "organization_id",
           "name",
           "address",
           "city",
@@ -1757,8 +1759,9 @@
             "type": "string",
             "title": "Description"
           },
-          "location": {
-            "$ref": "#/components/schemas/Location"
+          "location_id": {
+            "type": "string",
+            "title": "Location Id"
           },
           "start": {
             "type": "string",
@@ -1786,8 +1789,9 @@
             "type": "boolean",
             "title": "Completed"
           },
-          "contact": {
-            "$ref": "#/components/schemas/User"
+          "contact_id": {
+            "type": "string",
+            "title": "Contact Id"
           },
           "capacity": {
             "type": "integer",
@@ -1805,33 +1809,33 @@
             "type": "boolean",
             "title": "Auto Approve Waiters"
           },
-          "agreements": {
+          "agreement_ids": {
             "items": {
-              "$ref": "#/components/schemas/Agreement"
+              "type": "string"
             },
             "type": "array",
-            "title": "Agreements"
+            "title": "Agreement Ids"
           }
         },
         "type": "object",
         "required": [
           "title",
           "description",
-          "location",
+          "location_id",
           "start",
           "end",
           "public",
           "open",
           "cancelled",
           "completed",
-          "contact",
+          "contact_id",
           "capacity",
           "notes",
           "auto_approve_registrants",
           "auto_approve_waiters"
         ],
         "title": "Opportunity",
-        "description": "An Opportunity is an event at a location at a set time that users can participate in.\n\n* `title` is a quick name of the opportunity, which shows up on a list of opportunities\n* `description` is a longer explanation of the opportunity\n* `start` and `end` are the times the opportunity is open for participation\n* `location` is the place where the opportunity takes place\n* `public` indicates whether the opportunity is visible to all users or only to those\n  with a link\n* `cancelled` indicates whether the opportunity has been cancelled and is no longer available\n  for participation\n* `completed` indicates whether the opportunity's date has passed and the event took place\n* `contact` is the user who is responsible for the opportunity and can be contacted\n  for questions\n* `capacity` is the maximum number of participants allowed for the opportunity.\n  Users that register for the opportunity will be added as participants but with\n  `approved=False` unless and until an Organization manager approves them.\n* `auto_approve_registrants` indicates whether users that register for the opportunity\n  are automatically approved as participants when there is sufficient capacity,\n  or if they require approval by an Organization manager.\n* `auto_approve_waiters` indicates whether users that are not approved as participants\n  can be automatically promoted upon cancellation of another participant or expansion of\n  the opportunity's capacity, or if they require approval by an Organization manager.\n* `agreements` is a list of agreements that users must accept in order to participate\n  in the opportunity. Each agreement specifies its acceptance cadence."
+        "description": "An Opportunity is an event at a location at a set time that users can participate in.\n\n* `title` is a quick name of the opportunity, which shows up on a list of opportunities\n* `description` is a longer explanation of the opportunity\n* `start` and `end` are the times the opportunity is open for participation\n* `location_id` is the place where the opportunity takes place\n* `public` indicates whether the opportunity is visible to all users or only to those\n  with a link\n* `cancelled` indicates whether the opportunity has been cancelled and is no longer available\n  for participation\n* `completed` indicates whether the opportunity's date has passed and the event took place\n* `contact_id` is the user who is responsible for the opportunity and can be contacted\n  for questions\n* `capacity` is the maximum number of participants allowed for the opportunity.\n  Users that register for the opportunity will be added as participants but with\n  `approved=False` unless and until an Organization manager approves them.\n* `auto_approve_registrants` indicates whether users that register for the opportunity\n  are automatically approved as participants when there is sufficient capacity,\n  or if they require approval by an Organization manager.\n* `auto_approve_waiters` indicates whether users that are not approved as participants\n  can be automatically promoted upon cancellation of another participant or expansion of\n  the opportunity's capacity, or if they require approval by an Organization manager.\n* `agreement_ids` are the agreements that users must accept in order to participate\n  in the opportunity. Each agreement specifies its own acceptance cadence."
       },
       "Organization": {
         "properties": {
@@ -1885,11 +1889,13 @@
       },
       "Participant": {
         "properties": {
-          "user": {
-            "$ref": "#/components/schemas/User"
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
           },
-          "opportunity": {
-            "$ref": "#/components/schemas/Opportunity"
+          "opportunity_id": {
+            "type": "string",
+            "title": "Opportunity Id"
           },
           "approved": {
             "type": "boolean",
@@ -1906,8 +1912,8 @@
         },
         "type": "object",
         "required": [
-          "user",
-          "opportunity",
+          "user_id",
+          "opportunity_id",
           "approved",
           "cancelled",
           "attended"
@@ -1936,11 +1942,13 @@
       },
       "Role": {
         "properties": {
-          "organization": {
-            "$ref": "#/components/schemas/Organization"
+          "organization_id": {
+            "type": "string",
+            "title": "Organization Id"
           },
-          "user": {
-            "$ref": "#/components/schemas/User"
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
           },
           "type": {
             "$ref": "#/components/schemas/RoleType"
@@ -1948,8 +1956,8 @@
         },
         "type": "object",
         "required": [
-          "organization",
-          "user",
+          "organization_id",
+          "user_id",
           "type"
         ],
         "title": "Role",
@@ -1968,8 +1976,9 @@
       },
       "StoredAgreement": {
         "properties": {
-          "organization": {
-            "$ref": "#/components/schemas/Organization"
+          "organization_id": {
+            "type": "string",
+            "title": "Organization Id"
           },
           "title": {
             "type": "string",
@@ -2028,7 +2037,7 @@
         },
         "type": "object",
         "required": [
-          "organization",
+          "organization_id",
           "title",
           "description",
           "content",
@@ -2041,8 +2050,9 @@
       },
       "StoredLocation": {
         "properties": {
-          "organization": {
-            "$ref": "#/components/schemas/Organization"
+          "organization_id": {
+            "type": "string",
+            "title": "Organization Id"
           },
           "name": {
             "type": "string",
@@ -2100,7 +2110,7 @@
         },
         "type": "object",
         "required": [
-          "organization",
+          "organization_id",
           "name",
           "address",
           "city",
@@ -2121,8 +2131,9 @@
             "type": "string",
             "title": "Description"
           },
-          "location": {
-            "$ref": "#/components/schemas/Location"
+          "location_id": {
+            "type": "string",
+            "title": "Location Id"
           },
           "start": {
             "type": "string",
@@ -2150,8 +2161,9 @@
             "type": "boolean",
             "title": "Completed"
           },
-          "contact": {
-            "$ref": "#/components/schemas/User"
+          "contact_id": {
+            "type": "string",
+            "title": "Contact Id"
           },
           "capacity": {
             "type": "integer",
@@ -2169,12 +2181,12 @@
             "type": "boolean",
             "title": "Auto Approve Waiters"
           },
-          "agreements": {
+          "agreement_ids": {
             "items": {
-              "$ref": "#/components/schemas/Agreement"
+              "type": "string"
             },
             "type": "array",
-            "title": "Agreements"
+            "title": "Agreement Ids"
           },
           "id": {
             "type": "string",
@@ -2210,14 +2222,14 @@
         "required": [
           "title",
           "description",
-          "location",
+          "location_id",
           "start",
           "end",
           "public",
           "open",
           "cancelled",
           "completed",
-          "contact",
+          "contact_id",
           "capacity",
           "notes",
           "auto_approve_registrants",
@@ -2307,11 +2319,13 @@
       },
       "StoredParticipant": {
         "properties": {
-          "user": {
-            "$ref": "#/components/schemas/User"
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
           },
-          "opportunity": {
-            "$ref": "#/components/schemas/Opportunity"
+          "opportunity_id": {
+            "type": "string",
+            "title": "Opportunity Id"
           },
           "approved": {
             "type": "boolean",
@@ -2357,8 +2371,8 @@
         },
         "type": "object",
         "required": [
-          "user",
-          "opportunity",
+          "user_id",
+          "opportunity_id",
           "approved",
           "cancelled",
           "attended"
@@ -2368,11 +2382,13 @@
       },
       "StoredRole": {
         "properties": {
-          "organization": {
-            "$ref": "#/components/schemas/Organization"
+          "organization_id": {
+            "type": "string",
+            "title": "Organization Id"
           },
-          "user": {
-            "$ref": "#/components/schemas/User"
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
           },
           "type": {
             "$ref": "#/components/schemas/RoleType"
@@ -2409,8 +2425,8 @@
         },
         "type": "object",
         "required": [
-          "organization",
-          "user",
+          "organization_id",
+          "user_id",
           "type"
         ],
         "title": "StoredRole",
