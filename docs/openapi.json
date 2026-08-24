@@ -1302,6 +1302,45 @@
           }
         }
       }
+    },
+    "/api/participants/{participant_id}/cancel": {
+      "post": {
+        "summary": "Cancel Participant",
+        "operationId": "cancel_participant_api_participants__participant_id__cancel_post",
+        "parameters": [
+          {
+            "name": "participant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Participant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredParticipant"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1411,7 +1450,7 @@
       "Body_create_participant_api_participants_post": {
         "properties": {
           "body": {
-            "$ref": "#/components/schemas/Participant"
+            "$ref": "#/components/schemas/RegisterParticipant"
           }
         },
         "type": "object",
@@ -1875,6 +1914,25 @@
         ],
         "title": "Participant",
         "description": "A Participant is a User who has registered for an Opportunity.\n\n* `approved` participants were either auto-approved by the registration engine,\n  or were manually approved by an Organization manager.\n* `cancelled` is generally set by the user, changing their intent to participate.\n  Updates to `cancelled` trigger registration to see if any approved=false users\n  should be approved to fill the opportunity's capacity.\n* `attended` tracks whether or not the participant actually attended the opportunity."
+      },
+      "RegisterParticipant": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "opportunity_id": {
+            "type": "string",
+            "title": "Opportunity Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "opportunity_id"
+        ],
+        "title": "RegisterParticipant",
+        "description": "Request body to register a user's participation in an opportunity."
       },
       "Role": {
         "properties": {

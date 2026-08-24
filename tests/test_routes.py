@@ -1,8 +1,7 @@
-"""Coverage for the route skeletons in openvols.api.routers.
+"""Coverage for the routes in openvols.api.routers, backed by a real (in-memory) Store.
 
-These routes have no data layer wired up yet, so the tests only confirm the
-HTTP contract: the right shape goes in, a 200 comes back, and the response
-validates against each route's response_model.
+The client fixture runs the app's lifespan so each test gets a fresh, empty
+MemoryStore -- state never leaks between tests.
 """
 
 import fastapi.testclient
@@ -13,7 +12,8 @@ from openvols.api import routers
 
 @pytest.fixture
 def client():
-    return fastapi.testclient.TestClient(routers.app)
+    with fastapi.testclient.TestClient(routers.app) as client:
+        yield client
 
 
 # ---- Payload fixtures ------------------------------------------------------
@@ -99,20 +99,11 @@ def opportunity_body(location_body, user_body):
     }
 
 
-@pytest.fixture
-def participant_body(user_body, opportunity_body):
-    return {
-        "user": user_body,
-        "opportunity": opportunity_body,
-        "approved": True,
-        "cancelled": False,
-        "attended": False,
-    }
-
-
 # ---- CRUD route coverage ----------------------------------------------------
-# Every model gets the same create/list/get/update/delete routes, so the
-# coverage is parametrized across resources instead of duplicated per model.
+# Organizations/users/roles/locations/agreements/opportunities all share the
+# same create/list/get/update/delete shape, so the coverage is parametrized
+# instead of duplicated per model. Participants are covered separately below
+# since registration -- not a plain create -- is how they come into being.
 
 RESOURCES = [
     ("organizations", "organization_body"),
@@ -121,7 +112,6 @@ RESOURCES = [
     ("locations", "location_body"),
     ("agreements", "agreement_body"),
     ("opportunities", "opportunity_body"),
-    ("participants", "participant_body"),
 ]
 
 
@@ -144,28 +134,131 @@ def test_list(client, resource, body_fixture):
 
 
 @pytest.mark.parametrize("resource, body_fixture", RESOURCES)
-def test_get(client, resource, body_fixture):
-    response = client.get(f"/api/{resource}/some-id")
+def test_get(client, request, resource, body_fixture):
+    body = request.getfixturevalue(body_fixture)
+    created = client.post(f"/api/{resource}", json={"body": body}).json()
+
+    response = client.get(f"/api/{resource}/{created['id']}")
 
     assert response.status_code == 200
-    assert response.json()["id"] == "some-id"
+    assert response.json()["id"] == created["id"]
+
+
+@pytest.mark.parametrize("resource, body_fixture", RESOURCES)
+def test_get_not_found(client, resource, body_fixture):
+    response = client.get(f"/api/{resource}/some-id")
+
+    assert response.status_code == 404
 
 
 @pytest.mark.parametrize("resource, body_fixture", RESOURCES)
 def test_update(client, request, resource, body_fixture):
     body = request.getfixturevalue(body_fixture)
+    created = client.post(f"/api/{resource}", json={"body": body}).json()
 
-    response = client.patch(f"/api/{resource}/some-id", json={"body": body})
+    response = client.patch(f"/api/{resource}/{created['id']}", json={"body": body})
 
     assert response.status_code == 200
-    assert response.json()["id"] == "some-id"
+    assert response.json()["id"] == created["id"]
 
 
 @pytest.mark.parametrize("resource, body_fixture", RESOURCES)
-def test_delete(client, resource, body_fixture):
-    response = client.delete(f"/api/{resource}/some-id")
+def test_delete(client, request, resource, body_fixture):
+    body = request.getfixturevalue(body_fixture)
+    created = client.post(f"/api/{resource}", json={"body": body}).json()
+
+    response = client.delete(f"/api/{resource}/{created['id']}")
 
     assert response.status_code == 200
+    assert client.get(f"/api/{resource}/{created['id']}").status_code == 404
+
+
+# ---- Participants / registration engine -------------------------------------
+
+
+@pytest.fixture
+def registered_participant(client, user_body, opportunity_body):
+    """Create a user and an opportunity, then register the user for it."""
+    user = client.post("/api/users", json={"body": user_body}).json()
+    opportunity = client.post("/api/opportunities", json={"body": opportunity_body}).json()
+
+    response = client.post(
+        "/api/participants",
+        json={"body": {"user_id": user["id"], "opportunity_id": opportunity["id"]}},
+    )
+    return response.json()
+
+
+def test_register_participant(registered_participant):
+    assert registered_participant["id"]
+    assert registered_participant["approved"] is True  # opportunity_body has capacity=10
+    assert registered_participant["cancelled"] is False
+
+
+def test_get_participant(client, registered_participant):
+    response = client.get(f"/api/participants/{registered_participant['id']}")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == registered_participant["id"]
+
+
+def test_list_participants(client, registered_participant):
+    response = client.get("/api/participants")
+
+    assert response.status_code == 200
+    assert [p["id"] for p in response.json()["participants"]] == [registered_participant["id"]]
+
+
+def test_update_participant(client, registered_participant):
+    body = {**registered_participant, "attended": True}
+
+    response = client.patch(
+        f"/api/participants/{registered_participant['id']}", json={"body": body}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["attended"] is True
+
+
+def test_cancel_participant(client, registered_participant):
+    response = client.post(f"/api/participants/{registered_participant['id']}/cancel")
+
+    assert response.status_code == 200
+    assert response.json()["cancelled"] is True
+
+
+def test_delete_participant(client, registered_participant):
+    response = client.delete(f"/api/participants/{registered_participant['id']}")
+
+    assert response.status_code == 200
+    assert client.get(f"/api/participants/{registered_participant['id']}").status_code == 404
+
+
+def test_registration_waitlists_over_capacity(client, user_body, opportunity_body):
+    opportunity_body = {**opportunity_body, "capacity": 1}
+    opportunity = client.post("/api/opportunities", json={"body": opportunity_body}).json()
+
+    first_user = client.post("/api/users", json={"body": user_body}).json()
+    second_user = client.post(
+        "/api/users", json={"body": {**user_body, "email": "second@example.org"}}
+    ).json()
+
+    first = client.post(
+        "/api/participants",
+        json={"body": {"user_id": first_user["id"], "opportunity_id": opportunity["id"]}},
+    ).json()
+    second = client.post(
+        "/api/participants",
+        json={"body": {"user_id": second_user["id"], "opportunity_id": opportunity["id"]}},
+    ).json()
+
+    assert first["approved"] is True
+    assert second["approved"] is False  # waitlisted, capacity is 1
+
+    client.post(f"/api/participants/{first['id']}/cancel")
+
+    promoted = client.get(f"/api/participants/{second['id']}").json()
+    assert promoted["approved"] is True
 
 
 # ---- Auth routes -------------------------------------------------------------

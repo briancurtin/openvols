@@ -7,6 +7,7 @@ openvols.data._store. That is what keeps callers decoupled from which
 backend is actually configured.
 """
 
+from openvols.data._factory import create_store
 from openvols.data._store import (
     AgreementRepository,
     ConflictError,
@@ -37,4 +38,5 @@ __all__ = [
     "RoleRepository",
     "Store",
     "UserRepository",
+    "create_store",
 ]
