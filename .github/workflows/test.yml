@@ -1,0 +1,84 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Run tests
+        run: uv run --python 3.14 pytest --cov --cov-report=term --cov-report=json:coverage-head.json
+
+      - name: Run tests against base branch
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: |
+          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=1
+          git worktree add /tmp/coverage-base "origin/${{ github.event.pull_request.base.ref }}"
+          cd /tmp/coverage-base
+          uv run --python 3.14 pytest --cov --cov-report=json:"${GITHUB_WORKSPACE}/coverage-base.json"
+
+      - name: Compare coverage
+        if: always()
+        run: |
+          if [ ! -f coverage-head.json ]; then
+            echo "No coverage data was produced; skipping coverage summary." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [ -f coverage-base.json ]; then
+            ./scripts/coverage-diff coverage-head.json coverage-base.json | tee coverage-comment.md
+          else
+            ./scripts/coverage-diff coverage-head.json | tee coverage-comment.md
+          fi
+          cat coverage-comment.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on pull request
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            if (!fs.existsSync("coverage-comment.md")) {
+              return;
+            }
+            const body = fs.readFileSync("coverage-comment.md", "utf8");
+            const marker = "<!-- openvols-coverage-diff -->";
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body.startsWith(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
