@@ -15,7 +15,8 @@ def main() -> int:
         "openvols.api:app",
         host="0.0.0.0",
         port=8000,
-        reload=bool(os.getenv("UVICORN_RELOAD", False)),
+        # If UVICORN_RELOAD is set to _anything_, it's on
+        reload=bool(os.getenv("UVICORN_RELOAD", 0)),
     )
     return 0
 
