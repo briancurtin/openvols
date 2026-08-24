@@ -16,7 +16,7 @@ def main() -> int:
         host="0.0.0.0",
         port=8000,
         # If UVICORN_RELOAD is set to _anything_, it's on
-        reload=bool(os.getenv("UVICORN_RELOAD", 0)),
+        reload=bool(os.getenv("UVICORN_RELOAD") or False),
     )
     return 0
 
