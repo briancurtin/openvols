@@ -162,7 +162,7 @@ def test_get(client, request, resource, body_fixture):
 
 @pytest.mark.parametrize("resource, body_fixture", RESOURCES)
 def test_get_not_found(client, resource, body_fixture):
-    response = client.get(f"/api/{resource}/some-id")
+    response = client.get(f"/api/{resource}/00000")
 
     assert response.status_code == 404
 

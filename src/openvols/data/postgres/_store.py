@@ -38,19 +38,14 @@ class _SimpleRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]
         self._stored_cls = stored_cls
 
     async def create(self, item: InputT) -> StoredT:
-        now = datetime.datetime.now(datetime.UTC)
-        id_ = str(uuid.uuid4())
         values = item.model_dump()
-        cols = ("id", "created", "updated", *self._columns)
-        placeholders = ", ".join(f"${i}" for i in range(1, len(cols) + 1))
-        query = f"INSERT INTO {self._table} ({', '.join(cols)}) VALUES ({placeholders}) RETURNING *"
-        row = await self._store.pool.fetchrow(
-            query, id_, now, now, *(values[column] for column in self._columns)
-        )
+        placeholders = ", ".join(f"${i}" for i in range(1, len(self._columns) + 1))
+        query = f"INSERT INTO {self._table} ({', '.join(self._columns)}) VALUES ({placeholders}) RETURNING *"
+        row = await self._store.pool.fetchrow(query, *(values[column] for column in self._columns))
         assert row is not None
         return self._stored_cls(**dict(row))
 
-    async def get(self, id: str) -> StoredT:
+    async def get(self, id: int) -> StoredT:
         row = await self._store.pool.fetchrow(f"SELECT * FROM {self._table} WHERE id = $1", id)
         if row is None:
             raise data.NotFoundError(self._stored_cls.__name__, id)
@@ -63,22 +58,21 @@ class _SimpleRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]
         rows = await self._store.pool.fetch(f"SELECT * FROM {self._table} ORDER BY created")
         return [self._stored_cls(**dict(row)) for row in rows]
 
-    async def update(self, id: str, item: InputT) -> StoredT:
-        now = datetime.datetime.now(datetime.UTC)
+    async def update(self, id: int, item: InputT) -> StoredT:
         values = item.model_dump()
-        assignments = ", ".join(f"{column} = ${i + 2}" for i, column in enumerate(self._columns))
+        assignments = ", ".join(f"{column} = ${i + 1}" for i, column in enumerate(self._columns))
         query = (
-            f"UPDATE {self._table} SET updated = $1, {assignments} "
-            f"WHERE id = ${len(self._columns) + 2} RETURNING *"
+            f"UPDATE {self._table} SET {assignments} "
+            f"WHERE id = ${len(self._columns) + 1} RETURNING *"
         )
         row = await self._store.pool.fetchrow(
-            query, now, *(values[column] for column in self._columns), id
+            query, *(values[column] for column in self._columns), id
         )
         if row is None:
             raise data.NotFoundError(self._stored_cls.__name__, id)
         return self._stored_cls(**dict(row))
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         result = await self._store.pool.execute(f"DELETE FROM {self._table} WHERE id = $1", id)
         if result == "DELETE 0":
             raise data.NotFoundError(self._stored_cls.__name__, id)
@@ -104,13 +98,8 @@ class _RoleRepository:
 
     async def create(self, item: models.Role) -> models.StoredRole:
         await self._validate(item)
-        now = datetime.datetime.now(datetime.UTC)
         row = await self._store.pool.fetchrow(
-            "INSERT INTO roles (id, created, updated, organization_id, user_id, type) "
-            "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-            str(uuid.uuid4()),
-            now,
-            now,
+            "INSERT INTO roles (organization_id, user_id, type) VALUES ($1, $2, $3) RETURNING *",
             item.organization_id,
             item.user_id,
             item.type.value,
@@ -118,7 +107,7 @@ class _RoleRepository:
         assert row is not None
         return models.StoredRole(**dict(row))
 
-    async def get(self, id: str) -> models.StoredRole:
+    async def get(self, id: int) -> models.StoredRole:
         row = await self._store.pool.fetchrow("SELECT * FROM roles WHERE id = $1", id)
         if row is None:
             raise data.NotFoundError("StoredRole", id)
@@ -128,12 +117,11 @@ class _RoleRepository:
         rows = await self._store.pool.fetch("SELECT * FROM roles ORDER BY created")
         return [models.StoredRole(**dict(row)) for row in rows]
 
-    async def update(self, id: str, item: models.Role) -> models.StoredRole:
+    async def update(self, id: int, item: models.Role) -> models.StoredRole:
         await self._validate(item)
         row = await self._store.pool.fetchrow(
-            "UPDATE roles SET updated = $1, organization_id = $2, user_id = $3, type = $4 "
-            "WHERE id = $5 RETURNING *",
-            datetime.datetime.now(datetime.UTC),
+            "UPDATE roles SET organization_id = $1, user_id = $2, type = $3 "
+            "WHERE id = $4 RETURNING *",
             item.organization_id,
             item.user_id,
             item.type.value,
@@ -143,7 +131,7 @@ class _RoleRepository:
             raise data.NotFoundError("StoredRole", id)
         return models.StoredRole(**dict(row))
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         result = await self._store.pool.execute("DELETE FROM roles WHERE id = $1", id)
         if result == "DELETE 0":
             raise data.NotFoundError("StoredRole", id)
@@ -165,17 +153,17 @@ class _LocationRepository:
         await self._store.organizations.get(item.organization_id)
         return await self._repository.create(item)
 
-    async def get(self, id: str) -> models.StoredLocation:
+    async def get(self, id: int) -> models.StoredLocation:
         return await self._repository.get(id)
 
     async def list(self) -> builtins.list[models.StoredLocation]:
         return await self._repository.list()
 
-    async def update(self, id: str, item: models.Location) -> models.StoredLocation:
+    async def update(self, id: int, item: models.Location) -> models.StoredLocation:
         await self._store.organizations.get(item.organization_id)
         return await self._repository.update(id, item)
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         await self._repository.delete(id)
 
 
@@ -195,17 +183,17 @@ class _AgreementRepository:
         await self._store.organizations.get(item.organization_id)
         return await self._repository.create(item)
 
-    async def get(self, id: str) -> models.StoredAgreement:
+    async def get(self, id: int) -> models.StoredAgreement:
         return await self._repository.get(id)
 
     async def list(self) -> builtins.list[models.StoredAgreement]:
         return await self._repository.list()
 
-    async def update(self, id: str, item: models.Agreement) -> models.StoredAgreement:
+    async def update(self, id: int, item: models.Agreement) -> models.StoredAgreement:
         await self._store.organizations.get(item.organization_id)
         return await self._repository.update(id, item)
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         await self._repository.delete(id)
 
 
@@ -268,7 +256,7 @@ class _OpportunityRepository:
             await self._store.agreements.get(agreement_id)
 
     async def _agreement_ids(
-        self, conn: asyncpg.pool.PoolConnectionProxy, id: str
+        self, conn: asyncpg.pool.PoolConnectionProxy, id: int
     ) -> builtins.list[str]:
         rows = await conn.fetch(
             "SELECT agreement_id FROM opportunity_agreements WHERE opportunity_id = $1 "
@@ -279,27 +267,23 @@ class _OpportunityRepository:
 
     async def create(self, item: models.Opportunity) -> models.StoredOpportunity:
         await self._validate(item)
-        now = datetime.datetime.now(datetime.UTC)
-        id_ = str(uuid.uuid4())
         values = _opportunity_row_values(item)
-        cols = ("id", "created", "updated", *_OPPORTUNITY_COLUMNS)
+        cols = _OPPORTUNITY_COLUMNS
         placeholders = ", ".join(f"${i}" for i in range(1, len(cols) + 1))
         query = f"INSERT INTO opportunities ({', '.join(cols)}) VALUES ({placeholders}) RETURNING *"
         async with self._store.pool.acquire() as conn, conn.transaction():
-            row = await conn.fetchrow(
-                query, id_, now, now, *(values[column] for column in _OPPORTUNITY_COLUMNS)
-            )
+            row = await conn.fetchrow(query, *(values[column] for column in _OPPORTUNITY_COLUMNS))
             for agreement_id in item.agreement_ids:
                 await conn.execute(
                     "INSERT INTO opportunity_agreements (opportunity_id, agreement_id) "
                     "VALUES ($1, $2)",
-                    id_,
+                    row["id"],
                     agreement_id,
                 )
         assert row is not None
         return _opportunity_from_row(row, list(item.agreement_ids))
 
-    async def get(self, id: str) -> models.StoredOpportunity:
+    async def get(self, id: int) -> models.StoredOpportunity:
         async with self._store.pool.acquire() as conn:
             row = await conn.fetchrow("SELECT * FROM opportunities WHERE id = $1", id)
             if row is None:
@@ -315,15 +299,15 @@ class _OpportunityRepository:
                 for row in rows
             ]
 
-    async def update(self, id: str, item: models.Opportunity) -> models.StoredOpportunity:
+    async def update(self, id: int, item: models.Opportunity) -> models.StoredOpportunity:
         await self._validate(item)
         values = _opportunity_row_values(item)
         assignments = ", ".join(
-            f"{column} = ${i + 2}" for i, column in enumerate(_OPPORTUNITY_COLUMNS)
+            f"{column} = ${i + 1}" for i, column in enumerate(_OPPORTUNITY_COLUMNS)
         )
         query = (
-            f"UPDATE opportunities SET updated = $1, {assignments} "
-            f"WHERE id = ${len(_OPPORTUNITY_COLUMNS) + 2} RETURNING *"
+            f"UPDATE opportunities SET {assignments} "
+            f"WHERE id = ${len(_OPPORTUNITY_COLUMNS) + 1} RETURNING *"
         )
         async with self._store.pool.acquire() as conn, conn.transaction():
             # Locks the opportunity row for the rest of this transaction --
@@ -331,7 +315,6 @@ class _OpportunityRepository:
             # lock, so a separate SELECT ... FOR UPDATE isn't needed here.
             row = await conn.fetchrow(
                 query,
-                datetime.datetime.now(datetime.UTC),
                 *(values[column] for column in _OPPORTUNITY_COLUMNS),
                 id,
             )
@@ -351,7 +334,7 @@ class _OpportunityRepository:
 
         return _opportunity_from_row(row, list(item.agreement_ids))
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         result = await self._store.pool.execute("DELETE FROM opportunities WHERE id = $1", id)
         if result == "DELETE 0":
             raise data.NotFoundError("StoredOpportunity", id)
@@ -375,7 +358,7 @@ class _ParticipantRepository:
     def _from_row(row: asyncpg.Record) -> models.StoredParticipant:
         return models.StoredParticipant(**dict(row))
 
-    async def get(self, id: str) -> models.StoredParticipant:
+    async def get(self, id: int) -> models.StoredParticipant:
         row = await self._store.pool.fetchrow("SELECT * FROM participants WHERE id = $1", id)
         if row is None:
             raise data.NotFoundError("StoredParticipant", id)
@@ -385,11 +368,10 @@ class _ParticipantRepository:
         rows = await self._store.pool.fetch("SELECT * FROM participants ORDER BY created")
         return [self._from_row(row) for row in rows]
 
-    async def update(self, id: str, item: models.Participant) -> models.StoredParticipant:
+    async def update(self, id: int, item: models.Participant) -> models.StoredParticipant:
         row = await self._store.pool.fetchrow(
-            "UPDATE participants SET updated = $1, user_id = $2, opportunity_id = $3, "
-            "approved = $4, cancelled = $5, attended = $6 WHERE id = $7 RETURNING *",
-            datetime.datetime.now(datetime.UTC),
+            "UPDATE participants SET user_id = $1, opportunity_id = $2, "
+            "approved = $3, cancelled = $4, attended = $5 WHERE id = $6 RETURNING *",
             item.user_id,
             item.opportunity_id,
             item.approved,
@@ -401,12 +383,12 @@ class _ParticipantRepository:
             raise data.NotFoundError("StoredParticipant", id)
         return self._from_row(row)
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         result = await self._store.pool.execute("DELETE FROM participants WHERE id = $1", id)
         if result == "DELETE 0":
             raise data.NotFoundError("StoredParticipant", id)
 
-    async def register(self, user_id: str, opportunity_id: str) -> models.StoredParticipant:
+    async def register(self, user_id: int, opportunity_id: int) -> models.StoredParticipant:
         await self._store.users.get(user_id)
 
         async with self._store.pool.acquire() as conn, conn.transaction():
@@ -435,11 +417,8 @@ class _ParticipantRepository:
             now = datetime.datetime.now(datetime.UTC)
             row = await conn.fetchrow(
                 "INSERT INTO participants "
-                "(id, created, updated, user_id, opportunity_id, approved, cancelled, attended) "
-                "VALUES ($1, $2, $3, $4, $5, $6, FALSE, FALSE) RETURNING *",
-                str(uuid.uuid4()),
-                now,
-                now,
+                "(user_id, opportunity_id, approved, cancelled, attended) "
+                "VALUES ($1, $2, $3, FALSE, FALSE) RETURNING *",
                 user_id,
                 opportunity_id,
                 approved_count < opportunity["capacity"],
@@ -447,7 +426,7 @@ class _ParticipantRepository:
         assert row is not None
         return self._from_row(row)
 
-    async def cancel(self, participant_id: str) -> None:
+    async def cancel(self, participant_id: int) -> None:
         # opportunity_id is immutable once a participant is created, so
         # reading it doesn't need to happen inside the locked section below.
         opportunity_id = await self._store.pool.fetchval(
@@ -467,15 +446,14 @@ class _ParticipantRepository:
                 return
 
             await conn.execute(
-                "UPDATE participants SET cancelled = TRUE, updated = $1 WHERE id = $2",
-                datetime.datetime.now(datetime.UTC),
+                "UPDATE participants SET cancelled = TRUE WHERE id = $1",
                 participant_id,
             )
             if participant["approved"]:
                 await self._promote_waitlist(conn, opportunity_id)
 
     async def _promote_waitlist(
-        self, conn: asyncpg.pool.PoolConnectionProxy, opportunity_id: str
+        self, conn: asyncpg.pool.PoolConnectionProxy, opportunity_id: int
     ) -> None:
         """
         Approve waitlisted participants FIFO until capacity is filled.
@@ -495,13 +473,12 @@ class _ParticipantRepository:
             return
 
         await conn.execute(
-            "UPDATE participants SET approved = TRUE, updated = $1 "
+            "UPDATE participants SET approved = TRUE "
             "WHERE id IN ("
             "  SELECT id FROM participants "
-            "  WHERE opportunity_id = $2 AND NOT approved AND NOT cancelled "
-            "  ORDER BY created ASC LIMIT $3"
+            "  WHERE opportunity_id = $1 AND NOT approved AND NOT cancelled "
+            "  ORDER BY created ASC LIMIT $2"
             ")",
-            datetime.datetime.now(datetime.UTC),
             opportunity_id,
             open_slots,
         )

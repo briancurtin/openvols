@@ -37,7 +37,7 @@ def _user(email: str) -> models.User:
     )
 
 
-def _location(organization_id: str) -> models.Location:
+def _location(organization_id: int) -> models.Location:
     return models.Location(
         organization_id=organization_id,
         name="Community Center",
@@ -49,7 +49,7 @@ def _location(organization_id: str) -> models.Location:
     )
 
 
-def _opportunity(location_id: str, contact_id: str, capacity: int) -> models.Opportunity:
+def _opportunity(location_id: int, contact_id: int, capacity: int) -> models.Opportunity:
     return models.Opportunity(
         title="Park Cleanup",
         description="Help clean up the park",
@@ -103,17 +103,17 @@ async def test_organization_crud_lifecycle(store):
 
 async def test_get_missing_raises_not_found(store):
     with pytest.raises(NotFoundError):
-        await store.organizations.get("does-not-exist")
+        await store.organizations.get(-123)
 
 
 async def test_delete_missing_raises_not_found(store):
     with pytest.raises(NotFoundError):
-        await store.organizations.delete("does-not-exist")
+        await store.organizations.delete(-456)
 
 
 async def test_location_rejects_dangling_organization_id(store):
     with pytest.raises(NotFoundError):
-        await store.locations.create(_location("does-not-exist"))
+        await store.locations.create(_location(-789))
 
 
 # ---- Registration engine ------------------------------------------------------

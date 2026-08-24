@@ -6,16 +6,22 @@ warranted. Every repository lives entirely in process memory -- nothing here
 persists across restarts -- and there is no concurrency control beyond
 Python's single-threaded event loop, which is sufficient for tests but not a
 substitute for a real backend's locking.
+
+NOTE: Postgres uses generated int ids and triggers for created/updated,
+whereas this implements them here in the store module
 """
 
 import builtins
 import datetime
-import uuid
+from functools import partial
+from random import randint
 from typing import Self
 
 import pydantic
 
 from openvols import data, models
+
+NEW_ID = partial(randint, 1000, 10000)
 
 
 class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
@@ -23,17 +29,15 @@ class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseMode
 
     def __init__(self, stored_cls: type[StoredT]):
         self._stored_cls = stored_cls
-        self._items: dict[str, StoredT] = {}
+        self._items: dict[int, StoredT] = {}
 
     async def create(self, item: InputT) -> StoredT:
         now = datetime.datetime.now(datetime.UTC)
-        stored = self._stored_cls(
-            id=str(uuid.uuid4()), created=now, updated=now, **item.model_dump()
-        )
+        stored = self._stored_cls(id=NEW_ID(), created=now, updated=now, **item.model_dump())
         self._items[stored.id] = stored
         return stored
 
-    async def get(self, id: str) -> StoredT:
+    async def get(self, id: int) -> StoredT:
         try:
             return self._items[id]
         except KeyError:
@@ -45,7 +49,7 @@ class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseMode
     async def list(self) -> builtins.list[StoredT]:
         return list(self._items.values())
 
-    async def update(self, id: str, item: InputT) -> StoredT:
+    async def update(self, id: int, item: InputT) -> StoredT:
         existing = await self.get(id)
         stored = self._stored_cls(
             id=id,
@@ -56,7 +60,7 @@ class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseMode
         self._items[id] = stored
         return stored
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         await self.get(id)
         del self._items[id]
 
@@ -81,17 +85,17 @@ class _RoleRepository:
         await self._validate(item)
         return await self._repository.create(item)
 
-    async def get(self, id: str) -> models.StoredRole:
+    async def get(self, id: int) -> models.StoredRole:
         return await self._repository.get(id)
 
     async def list(self) -> builtins.list[models.StoredRole]:
         return await self._repository.list()
 
-    async def update(self, id: str, item: models.Role) -> models.StoredRole:
+    async def update(self, id: int, item: models.Role) -> models.StoredRole:
         await self._validate(item)
         return await self._repository.update(id, item)
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         await self._repository.delete(id)
 
 
@@ -108,17 +112,17 @@ class _LocationRepository:
         await self._organizations.get(item.organization_id)
         return await self._repository.create(item)
 
-    async def get(self, id: str) -> models.StoredLocation:
+    async def get(self, id: int) -> models.StoredLocation:
         return await self._repository.get(id)
 
     async def list(self) -> builtins.list[models.StoredLocation]:
         return await self._repository.list()
 
-    async def update(self, id: str, item: models.Location) -> models.StoredLocation:
+    async def update(self, id: int, item: models.Location) -> models.StoredLocation:
         await self._organizations.get(item.organization_id)
         return await self._repository.update(id, item)
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         await self._repository.delete(id)
 
 
@@ -135,17 +139,17 @@ class _AgreementRepository:
         await self._organizations.get(item.organization_id)
         return await self._repository.create(item)
 
-    async def get(self, id: str) -> models.StoredAgreement:
+    async def get(self, id: int) -> models.StoredAgreement:
         return await self._repository.get(id)
 
     async def list(self) -> builtins.list[models.StoredAgreement]:
         return await self._repository.list()
 
-    async def update(self, id: str, item: models.Agreement) -> models.StoredAgreement:
+    async def update(self, id: int, item: models.Agreement) -> models.StoredAgreement:
         await self._organizations.get(item.organization_id)
         return await self._repository.update(id, item)
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         await self._repository.delete(id)
 
 
@@ -163,9 +167,9 @@ class _ParticipantRepository:
     ):
         self._opportunities = opportunities
         self._users = users
-        self._items: dict[str, models.StoredParticipant] = {}
+        self._items: dict[int, models.StoredParticipant] = {}
 
-    async def get(self, id: str) -> models.StoredParticipant:
+    async def get(self, id: int) -> models.StoredParticipant:
         try:
             return self._items[id]
         except KeyError:
@@ -174,7 +178,7 @@ class _ParticipantRepository:
     async def list(self) -> builtins.list[models.StoredParticipant]:
         return list(self._items.values())
 
-    async def update(self, id: str, item: models.Participant) -> models.StoredParticipant:
+    async def update(self, id: int, item: models.Participant) -> models.StoredParticipant:
         existing = await self.get(id)
         updated = models.StoredParticipant(
             id=id,
@@ -185,11 +189,11 @@ class _ParticipantRepository:
         self._items[id] = updated
         return updated
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         await self.get(id)
         del self._items[id]
 
-    async def register(self, user_id: str, opportunity_id: str) -> models.StoredParticipant:
+    async def register(self, user_id: int, opportunity_id: int) -> models.StoredParticipant:
         await self._users.get(user_id)
         opportunity = await self._opportunities.get(opportunity_id)
 
@@ -207,7 +211,7 @@ class _ParticipantRepository:
 
         now = datetime.datetime.now(datetime.UTC)
         participant = models.StoredParticipant(
-            id=str(uuid.uuid4()),
+            id=NEW_ID(),
             created=now,
             updated=now,
             user_id=user_id,
@@ -219,7 +223,7 @@ class _ParticipantRepository:
         self._items[participant.id] = participant
         return participant
 
-    async def cancel(self, participant_id: str) -> None:
+    async def cancel(self, participant_id: int) -> None:
         participant = await self.get(participant_id)
         if participant.cancelled:
             return
@@ -231,7 +235,7 @@ class _ParticipantRepository:
         if was_approved:
             await self.promote_waitlist(participant.opportunity_id)
 
-    async def promote_waitlist(self, opportunity_id: str) -> None:
+    async def promote_waitlist(self, opportunity_id: int) -> None:
         """
         Approve waitlisted participants FIFO until capacity is filled.
         Called after a cancellation frees a slot, or after an opportunity's
@@ -256,7 +260,7 @@ class _ParticipantRepository:
             )
             open_slots -= 1
 
-    def _approved_count(self, opportunity_id: str) -> int:
+    def _approved_count(self, opportunity_id: int) -> int:
         return sum(
             1
             for participant in self._items.values()
@@ -296,19 +300,19 @@ class _OpportunityRepository:
         await self._validate(item)
         return await self._repository.create(item)
 
-    async def get(self, id: str) -> models.StoredOpportunity:
+    async def get(self, id: int) -> models.StoredOpportunity:
         return await self._repository.get(id)
 
     async def list(self) -> builtins.list[models.StoredOpportunity]:
         return await self._repository.list()
 
-    async def update(self, id: str, item: models.Opportunity) -> models.StoredOpportunity:
+    async def update(self, id: int, item: models.Opportunity) -> models.StoredOpportunity:
         await self._validate(item)
         updated = await self._repository.update(id, item)
         await self._participants.promote_waitlist(id)
         return updated
 
-    async def delete(self, id: str) -> None:
+    async def delete(self, id: int) -> None:
         await self._repository.delete(id)
 
 

@@ -56,7 +56,7 @@ async def list_organizations(store: StoreDependency):
     "/api/organizations/{organization_id}",
     response_model=openvols.models.StoredOrganization,
 )
-async def get_organization(organization_id: str, store: StoreDependency):
+async def get_organization(organization_id: int, store: StoreDependency):
     return await store.organizations.get(organization_id)
 
 
@@ -65,7 +65,7 @@ async def get_organization(organization_id: str, store: StoreDependency):
     response_model=openvols.models.StoredOrganization,
 )
 async def update_organization(
-    organization_id: str,
+    organization_id: int,
     body: typing.Annotated[openvols.models.Organization, fastapi.Body(embed=True)],
     store: StoreDependency,
 ):
@@ -73,7 +73,7 @@ async def update_organization(
 
 
 @app.delete("/api/organizations/{organization_id}")
-async def delete_organization(organization_id: str, store: StoreDependency):
+async def delete_organization(organization_id: int, store: StoreDependency):
     await store.organizations.delete(organization_id)
     return 200
 
@@ -99,13 +99,13 @@ async def list_users(store: StoreDependency):
 
 
 @app.get("/api/users/{user_id}", response_model=openvols.models.StoredUser)
-async def get_user(user_id: str, store: StoreDependency):
+async def get_user(user_id: int, store: StoreDependency):
     return await store.users.get(user_id)
 
 
 @app.patch("/api/users/{user_id}", response_model=openvols.models.StoredUser)
 async def update_user(
-    user_id: str,
+    user_id: int,
     body: typing.Annotated[openvols.models.User, fastapi.Body(embed=True)],
     store: StoreDependency,
 ):
@@ -113,7 +113,7 @@ async def update_user(
 
 
 @app.delete("/api/users/{user_id}")
-async def delete_user(user_id: str, store: StoreDependency):
+async def delete_user(user_id: int, store: StoreDependency):
     await store.users.delete(user_id)
     return 200
 
@@ -139,13 +139,13 @@ async def list_roles(store: StoreDependency):
 
 
 @app.get("/api/roles/{role_id}", response_model=openvols.models.StoredRole)
-async def get_role(role_id: str, store: StoreDependency):
+async def get_role(role_id: int, store: StoreDependency):
     return await store.roles.get(role_id)
 
 
 @app.patch("/api/roles/{role_id}", response_model=openvols.models.StoredRole)
 async def update_role(
-    role_id: str,
+    role_id: int,
     body: typing.Annotated[openvols.models.Role, fastapi.Body(embed=True)],
     store: StoreDependency,
 ):
@@ -153,7 +153,7 @@ async def update_role(
 
 
 @app.delete("/api/roles/{role_id}")
-async def delete_role(role_id: str, store: StoreDependency):
+async def delete_role(role_id: int, store: StoreDependency):
     await store.roles.delete(role_id)
     return 200
 
@@ -179,13 +179,13 @@ async def list_locations(store: StoreDependency):
 
 
 @app.get("/api/locations/{location_id}", response_model=openvols.models.StoredLocation)
-async def get_location(location_id: str, store: StoreDependency):
+async def get_location(location_id: int, store: StoreDependency):
     return await store.locations.get(location_id)
 
 
 @app.patch("/api/locations/{location_id}", response_model=openvols.models.StoredLocation)
 async def update_location(
-    location_id: str,
+    location_id: int,
     body: typing.Annotated[openvols.models.Location, fastapi.Body(embed=True)],
     store: StoreDependency,
 ):
@@ -193,7 +193,7 @@ async def update_location(
 
 
 @app.delete("/api/locations/{location_id}")
-async def delete_location(location_id: str, store: StoreDependency):
+async def delete_location(location_id: int, store: StoreDependency):
     await store.locations.delete(location_id)
     return 200
 
@@ -219,13 +219,13 @@ async def list_agreements(store: StoreDependency):
 
 
 @app.get("/api/agreements/{agreement_id}", response_model=openvols.models.StoredAgreement)
-async def get_agreement(agreement_id: str, store: StoreDependency):
+async def get_agreement(agreement_id: int, store: StoreDependency):
     return await store.agreements.get(agreement_id)
 
 
 @app.patch("/api/agreements/{agreement_id}", response_model=openvols.models.StoredAgreement)
 async def update_agreement(
-    agreement_id: str,
+    agreement_id: int,
     body: typing.Annotated[openvols.models.Agreement, fastapi.Body(embed=True)],
     store: StoreDependency,
 ):
@@ -233,7 +233,7 @@ async def update_agreement(
 
 
 @app.delete("/api/agreements/{agreement_id}")
-async def delete_agreement(agreement_id: str, store: StoreDependency):
+async def delete_agreement(agreement_id: int, store: StoreDependency):
     await store.agreements.delete(agreement_id)
     return 200
 
@@ -262,7 +262,7 @@ async def list_opportunities(store: StoreDependency):
     "/api/opportunities/{opportunity_id}",
     response_model=openvols.models.StoredOpportunity,
 )
-async def get_opportunity(opportunity_id: str, store: StoreDependency):
+async def get_opportunity(opportunity_id: int, store: StoreDependency):
     return await store.opportunities.get(opportunity_id)
 
 
@@ -271,7 +271,7 @@ async def get_opportunity(opportunity_id: str, store: StoreDependency):
     response_model=openvols.models.StoredOpportunity,
 )
 async def update_opportunity(
-    opportunity_id: str,
+    opportunity_id: int,
     body: typing.Annotated[openvols.models.Opportunity, fastapi.Body(embed=True)],
     store: StoreDependency,
 ):
@@ -281,7 +281,7 @@ async def update_opportunity(
 
 
 @app.delete("/api/opportunities/{opportunity_id}")
-async def delete_opportunity(opportunity_id: str, store: StoreDependency):
+async def delete_opportunity(opportunity_id: int, store: StoreDependency):
     await store.opportunities.delete(opportunity_id)
     return 200
 
@@ -292,8 +292,8 @@ async def delete_opportunity(opportunity_id: str, store: StoreDependency):
 class RegisterParticipant(pydantic.BaseModel):
     """Request body to register a user's participation in an opportunity."""
 
-    user_id: str
-    opportunity_id: str
+    user_id: int
+    opportunity_id: int
 
 
 @app.post("/api/participants", response_model=openvols.models.StoredParticipant)
@@ -319,7 +319,7 @@ async def list_participants(store: StoreDependency):
     "/api/participants/{participant_id}",
     response_model=openvols.models.StoredParticipant,
 )
-async def get_participant(participant_id: str, store: StoreDependency):
+async def get_participant(participant_id: int, store: StoreDependency):
     return await store.participants.get(participant_id)
 
 
@@ -328,7 +328,7 @@ async def get_participant(participant_id: str, store: StoreDependency):
     response_model=openvols.models.StoredParticipant,
 )
 async def update_participant(
-    participant_id: str,
+    participant_id: int,
     body: typing.Annotated[openvols.models.Participant, fastapi.Body(embed=True)],
     store: StoreDependency,
 ):
@@ -339,7 +339,7 @@ async def update_participant(
     "/api/participants/{participant_id}/cancel",
     response_model=openvols.models.StoredParticipant,
 )
-async def cancel_participant(participant_id: str, store: StoreDependency):
+async def cancel_participant(participant_id: int, store: StoreDependency):
     # Cancelling an approved participant can free a slot -- the Store is
     # responsible for promoting the next waitlisted participant, FIFO.
     await store.participants.cancel(participant_id)
@@ -347,6 +347,6 @@ async def cancel_participant(participant_id: str, store: StoreDependency):
 
 
 @app.delete("/api/participants/{participant_id}")
-async def delete_participant(participant_id: str, store: StoreDependency):
+async def delete_participant(participant_id: int, store: StoreDependency):
     await store.participants.delete(participant_id)
     return 200

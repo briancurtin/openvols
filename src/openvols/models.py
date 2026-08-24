@@ -31,7 +31,7 @@ class USPhoneNumber(PhoneNumber):
 class StoredModel(pydantic.BaseModel):
     """An object that exists in the database"""
 
-    id: str = ""
+    id: int
     created: datetime | None = None
     updated: datetime | None = None
 
@@ -96,8 +96,8 @@ class Role(pydantic.BaseModel):
     * Managers can manage Opportunities and Participants.
     """
 
-    organization_id: str
-    user_id: str
+    organization_id: int
+    user_id: int
     type: RoleType
 
 
@@ -110,7 +110,7 @@ class Location(pydantic.BaseModel):
     A Location is the place where an Opportunity will take place
     """
 
-    organization_id: str
+    organization_id: int
     name: str
     address: str
     city: str
@@ -149,7 +149,7 @@ class Agreement(pydantic.BaseModel):
     are modified after a user has accepted them, preserving history of the state at acceptance.
     """
 
-    organization_id: str
+    organization_id: int
     title: str
     description: str
     content: str
@@ -192,14 +192,14 @@ class Opportunity(pydantic.BaseModel):
 
     title: str
     description: str
-    location_id: str
+    location_id: int
     start: datetime
     end: datetime
     public: bool
     open: bool
     cancelled: bool
     completed: bool
-    contact_id: str
+    contact_id: int
     capacity: int
     notes: str
     auto_approve_registrants: bool
@@ -223,8 +223,8 @@ class Participant(pydantic.BaseModel):
     * `attended` tracks whether or not the participant actually attended the opportunity.
     """
 
-    user_id: str
-    opportunity_id: str
+    user_id: int
+    opportunity_id: int
     approved: bool
     cancelled: bool
     attended: bool
