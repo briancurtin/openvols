@@ -37,6 +37,7 @@ build-backend = "uv_build"
 dev = [
     "pytest-asyncio>=1.4.0",
     "ruff>=0.16.1",
+    "ty>=0.0.74",
 ]
 
 [tool.ruff]
