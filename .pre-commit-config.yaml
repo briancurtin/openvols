@@ -15,6 +15,13 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: end-of-file-fixer
+        exclude: ^docs/openapi\.json$
       - id: trailing-whitespace
       - id: check-shebang-scripts-are-executable
       - id: detect-private-key
+  - repo: local
+    hooks:
+      - id: render-openapi
+        name: render-openapi
+        entry: scripts/render-openapi
+        language: script

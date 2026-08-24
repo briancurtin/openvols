@@ -1,0 +1,2512 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenVols API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_api_auth_login_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/validate": {
+      "get": {
+        "summary": "Validate Token",
+        "operationId": "validate_token_api_auth_validate_get",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organizations": {
+      "get": {
+        "summary": "List Organizations",
+        "operationId": "list_organizations_api_organizations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredOrganizations"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Organization",
+        "operationId": "create_organization_api_organizations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_organization_api_organizations_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredOrganization"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/organizations/{organization_id}": {
+      "get": {
+        "summary": "Get Organization",
+        "operationId": "get_organization_api_organizations__organization_id__get",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Organization Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredOrganization"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Organization",
+        "operationId": "update_organization_api_organizations__organization_id__patch",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Organization Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_organization_api_organizations__organization_id__patch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredOrganization"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Organization",
+        "operationId": "delete_organization_api_organizations__organization_id__delete",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Organization Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "List Users",
+        "operationId": "list_users_api_users_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredUsers"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create User",
+        "operationId": "create_user_api_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_user_api_users_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredUser"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{user_id}": {
+      "get": {
+        "summary": "Get User",
+        "operationId": "get_user_api_users__user_id__get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredUser"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update User",
+        "operationId": "update_user_api_users__user_id__patch",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_user_api_users__user_id__patch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredUser"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete User",
+        "operationId": "delete_user_api_users__user_id__delete",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/roles": {
+      "get": {
+        "summary": "List Roles",
+        "operationId": "list_roles_api_roles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredRoles"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Role",
+        "operationId": "create_role_api_roles_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_role_api_roles_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredRole"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/roles/{role_id}": {
+      "get": {
+        "summary": "Get Role",
+        "operationId": "get_role_api_roles__role_id__get",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredRole"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Role",
+        "operationId": "update_role_api_roles__role_id__patch",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_role_api_roles__role_id__patch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredRole"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Role",
+        "operationId": "delete_role_api_roles__role_id__delete",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations": {
+      "get": {
+        "summary": "List Locations",
+        "operationId": "list_locations_api_locations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredLocations"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Location",
+        "operationId": "create_location_api_locations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_location_api_locations_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredLocation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations/{location_id}": {
+      "get": {
+        "summary": "Get Location",
+        "operationId": "get_location_api_locations__location_id__get",
+        "parameters": [
+          {
+            "name": "location_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Location Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredLocation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Location",
+        "operationId": "update_location_api_locations__location_id__patch",
+        "parameters": [
+          {
+            "name": "location_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Location Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_location_api_locations__location_id__patch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredLocation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Location",
+        "operationId": "delete_location_api_locations__location_id__delete",
+        "parameters": [
+          {
+            "name": "location_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Location Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agreements": {
+      "get": {
+        "summary": "List Agreements",
+        "operationId": "list_agreements_api_agreements_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredAgreements"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Agreement",
+        "operationId": "create_agreement_api_agreements_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_agreement_api_agreements_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredAgreement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agreements/{agreement_id}": {
+      "get": {
+        "summary": "Get Agreement",
+        "operationId": "get_agreement_api_agreements__agreement_id__get",
+        "parameters": [
+          {
+            "name": "agreement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Agreement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredAgreement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Agreement",
+        "operationId": "update_agreement_api_agreements__agreement_id__patch",
+        "parameters": [
+          {
+            "name": "agreement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Agreement Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_agreement_api_agreements__agreement_id__patch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredAgreement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Agreement",
+        "operationId": "delete_agreement_api_agreements__agreement_id__delete",
+        "parameters": [
+          {
+            "name": "agreement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Agreement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/opportunities": {
+      "get": {
+        "summary": "List Opportunities",
+        "operationId": "list_opportunities_api_opportunities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredOpportunities"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Opportunity",
+        "operationId": "create_opportunity_api_opportunities_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_opportunity_api_opportunities_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredOpportunity"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/opportunities/{opportunity_id}": {
+      "get": {
+        "summary": "Get Opportunity",
+        "operationId": "get_opportunity_api_opportunities__opportunity_id__get",
+        "parameters": [
+          {
+            "name": "opportunity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Opportunity Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredOpportunity"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Opportunity",
+        "operationId": "update_opportunity_api_opportunities__opportunity_id__patch",
+        "parameters": [
+          {
+            "name": "opportunity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Opportunity Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_opportunity_api_opportunities__opportunity_id__patch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredOpportunity"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Opportunity",
+        "operationId": "delete_opportunity_api_opportunities__opportunity_id__delete",
+        "parameters": [
+          {
+            "name": "opportunity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Opportunity Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/participants": {
+      "get": {
+        "summary": "List Participants",
+        "operationId": "list_participants_api_participants_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredParticipants"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Participant",
+        "operationId": "create_participant_api_participants_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_participant_api_participants_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredParticipant"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/participants/{participant_id}": {
+      "get": {
+        "summary": "Get Participant",
+        "operationId": "get_participant_api_participants__participant_id__get",
+        "parameters": [
+          {
+            "name": "participant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Participant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredParticipant"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Participant",
+        "operationId": "update_participant_api_participants__participant_id__patch",
+        "parameters": [
+          {
+            "name": "participant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Participant Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_participant_api_participants__participant_id__patch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredParticipant"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Participant",
+        "operationId": "delete_participant_api_participants__participant_id__delete",
+        "parameters": [
+          {
+            "name": "participant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Participant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Agreement": {
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "valid": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid"
+          },
+          "invalid": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Invalid"
+          },
+          "cadence": {
+            "$ref": "#/components/schemas/AgreementCadence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organization",
+          "title",
+          "description",
+          "content",
+          "valid",
+          "invalid",
+          "cadence"
+        ],
+        "title": "Agreement",
+        "description": "An Agreement is a document that a User must accept in order to participate in an Opportunity.\n\nAgreements are immutable, and the Organization is responsibile for its content.\nAn Agreement considered valid from the `valid` date until set at its creation until\nit's marked as `invalid` by an Organization admin.\n\nInstead of editing an Agreement, invalidate it and create a new one. This ensures no agreements\nare modified after a user has accepted them, preserving history of the state at acceptance."
+      },
+      "AgreementCadence": {
+        "type": "string",
+        "enum": [
+          "per_opportunity",
+          "annual",
+          "perpetual"
+        ],
+        "title": "AgreementCadence",
+        "description": "An AgreementCadence represents how often an agreement needs to be accepted.\n\n- Perpetual agreements are accepted once and do not expire.\n- Annual agreements must be accepted once per calendar year.\n- Per Opportunity agreements must be accepted per opportunity."
+      },
+      "Body_create_agreement_api_agreements_post": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Agreement"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_create_agreement_api_agreements_post"
+      },
+      "Body_create_location_api_locations_post": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Location"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_create_location_api_locations_post"
+      },
+      "Body_create_opportunity_api_opportunities_post": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Opportunity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_create_opportunity_api_opportunities_post"
+      },
+      "Body_create_organization_api_organizations_post": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Organization"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_create_organization_api_organizations_post"
+      },
+      "Body_create_participant_api_participants_post": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Participant"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_create_participant_api_participants_post"
+      },
+      "Body_create_role_api_roles_post": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_create_role_api_roles_post"
+      },
+      "Body_create_user_api_users_post": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_create_user_api_users_post"
+      },
+      "Body_login_api_auth_login_post": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/LoginEmail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_login_api_auth_login_post"
+      },
+      "Body_update_agreement_api_agreements__agreement_id__patch": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Agreement"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_update_agreement_api_agreements__agreement_id__patch"
+      },
+      "Body_update_location_api_locations__location_id__patch": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Location"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_update_location_api_locations__location_id__patch"
+      },
+      "Body_update_opportunity_api_opportunities__opportunity_id__patch": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Opportunity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_update_opportunity_api_opportunities__opportunity_id__patch"
+      },
+      "Body_update_organization_api_organizations__organization_id__patch": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Organization"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_update_organization_api_organizations__organization_id__patch"
+      },
+      "Body_update_participant_api_participants__participant_id__patch": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Participant"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_update_participant_api_participants__participant_id__patch"
+      },
+      "Body_update_role_api_roles__role_id__patch": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_update_role_api_roles__role_id__patch"
+      },
+      "Body_update_user_api_users__user_id__patch": {
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "Body_update_user_api_users__user_id__patch"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ListStoredAgreements": {
+        "properties": {
+          "agreements": {
+            "items": {
+              "$ref": "#/components/schemas/StoredAgreement"
+            },
+            "type": "array",
+            "title": "Agreements",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ListStoredAgreements"
+      },
+      "ListStoredLocations": {
+        "properties": {
+          "locations": {
+            "items": {
+              "$ref": "#/components/schemas/StoredLocation"
+            },
+            "type": "array",
+            "title": "Locations",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ListStoredLocations"
+      },
+      "ListStoredOpportunities": {
+        "properties": {
+          "opportunities": {
+            "items": {
+              "$ref": "#/components/schemas/StoredOpportunity"
+            },
+            "type": "array",
+            "title": "Opportunities",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ListStoredOpportunities"
+      },
+      "ListStoredOrganizations": {
+        "properties": {
+          "organizations": {
+            "items": {
+              "$ref": "#/components/schemas/StoredOrganization"
+            },
+            "type": "array",
+            "title": "Organizations",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ListStoredOrganizations",
+        "description": "Return a list of Organizations, under the 'organizations' key"
+      },
+      "ListStoredParticipants": {
+        "properties": {
+          "participants": {
+            "items": {
+              "$ref": "#/components/schemas/StoredParticipant"
+            },
+            "type": "array",
+            "title": "Participants",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ListStoredParticipants"
+      },
+      "ListStoredRoles": {
+        "properties": {
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/StoredRole"
+            },
+            "type": "array",
+            "title": "Roles",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ListStoredRoles"
+      },
+      "ListStoredUsers": {
+        "properties": {
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/StoredUser"
+            },
+            "type": "array",
+            "title": "Users",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ListStoredUsers"
+      },
+      "Location": {
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "postal_code": {
+            "type": "string",
+            "title": "Postal Code"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organization",
+          "name",
+          "address",
+          "city",
+          "state",
+          "postal_code",
+          "country"
+        ],
+        "title": "Location",
+        "description": "A Location is the place where an Opportunity will take place"
+      },
+      "LoginEmail": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "LoginEmail"
+      },
+      "Opportunity": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "public": {
+            "type": "boolean",
+            "title": "Public"
+          },
+          "open": {
+            "type": "boolean",
+            "title": "Open"
+          },
+          "cancelled": {
+            "type": "boolean",
+            "title": "Cancelled"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/User"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          },
+          "auto_approve_registrants": {
+            "type": "boolean",
+            "title": "Auto Approve Registrants"
+          },
+          "auto_approve_waiters": {
+            "type": "boolean",
+            "title": "Auto Approve Waiters"
+          },
+          "agreements": {
+            "items": {
+              "$ref": "#/components/schemas/Agreement"
+            },
+            "type": "array",
+            "title": "Agreements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "description",
+          "location",
+          "start",
+          "end",
+          "public",
+          "open",
+          "cancelled",
+          "completed",
+          "contact",
+          "capacity",
+          "notes",
+          "auto_approve_registrants",
+          "auto_approve_waiters"
+        ],
+        "title": "Opportunity",
+        "description": "An Opportunity is an event at a location at a set time that users can participate in.\n\n* `title` is a quick name of the opportunity, which shows up on a list of opportunities\n* `description` is a longer explanation of the opportunity\n* `start` and `end` are the times the opportunity is open for participation\n* `location` is the place where the opportunity takes place\n* `public` indicates whether the opportunity is visible to all users or only to those\n  with a link\n* `cancelled` indicates whether the opportunity has been cancelled and is no longer available\n  for participation\n* `completed` indicates whether the opportunity's date has passed and the event took place\n* `contact` is the user who is responsible for the opportunity and can be contacted\n  for questions\n* `capacity` is the maximum number of participants allowed for the opportunity.\n  Users that register for the opportunity will be added as participants but with\n  `approved=False` unless and until an Organization manager approves them.\n* `auto_approve_registrants` indicates whether users that register for the opportunity\n  are automatically approved as participants when there is sufficient capacity,\n  or if they require approval by an Organization manager.\n* `auto_approve_waiters` indicates whether users that are not approved as participants\n  can be automatically promoted upon cancellation of another participant or expansion of\n  the opportunity's capacity, or if they require approval by an Organization manager.\n* `agreements` is a list of agreements that users must accept in order to participate\n  in the opportunity. Each agreement specifies its acceptance cadence."
+      },
+      "Organization": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "website": {
+            "type": "string",
+            "title": "Website"
+          },
+          "contact": {
+            "type": "string",
+            "title": "Contact"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "format": "phone",
+            "title": "Phone"
+          },
+          "private_allowed": {
+            "type": "boolean",
+            "title": "Private Allowed"
+          },
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "website",
+          "contact",
+          "email",
+          "phone",
+          "private_allowed",
+          "approved"
+        ],
+        "title": "Organization",
+        "description": "An organization to create. Requires approval."
+      },
+      "Participant": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "opportunity": {
+            "$ref": "#/components/schemas/Opportunity"
+          },
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          },
+          "cancelled": {
+            "type": "boolean",
+            "title": "Cancelled"
+          },
+          "attended": {
+            "type": "boolean",
+            "title": "Attended"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "opportunity",
+          "approved",
+          "cancelled",
+          "attended"
+        ],
+        "title": "Participant",
+        "description": "A Participant is a User who has registered for an Opportunity.\n\n* `approved` participants were either auto-approved by the registration engine,\n  or were manually approved by an Organization manager.\n* `cancelled` is generally set by the user, changing their intent to participate.\n  Updates to `cancelled` trigger registration to see if any approved=false users\n  should be approved to fill the opportunity's capacity.\n* `attended` tracks whether or not the participant actually attended the opportunity."
+      },
+      "Role": {
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "type": {
+            "$ref": "#/components/schemas/RoleType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organization",
+          "user",
+          "type"
+        ],
+        "title": "Role",
+        "description": "A User may have a role for a given Organization\n\nUsers default to having no role and can assume elevated permissions within an Organization\nif a role is granted for one.\n\n* Super Admins have access to the entire platform\n* Admins have access to all data for an Organization and can elevate users to managers,\n  and manage the Organization and its Opportunities and their related objects.\n* Managers can manage Opportunities and Participants."
+      },
+      "RoleType": {
+        "type": "integer",
+        "enum": [
+          0,
+          1,
+          2,
+          99
+        ],
+        "title": "RoleType",
+        "description": "A RoleType is a the level permission granted to a User for an Organization."
+      },
+      "StoredAgreement": {
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "valid": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid"
+          },
+          "invalid": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Invalid"
+          },
+          "cadence": {
+            "$ref": "#/components/schemas/AgreementCadence"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organization",
+          "title",
+          "description",
+          "content",
+          "valid",
+          "invalid",
+          "cadence"
+        ],
+        "title": "StoredAgreement",
+        "description": "An Agreement in the data layer"
+      },
+      "StoredLocation": {
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "postal_code": {
+            "type": "string",
+            "title": "Postal Code"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organization",
+          "name",
+          "address",
+          "city",
+          "state",
+          "postal_code",
+          "country"
+        ],
+        "title": "StoredLocation",
+        "description": "A Location in the data layer"
+      },
+      "StoredOpportunity": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End"
+          },
+          "public": {
+            "type": "boolean",
+            "title": "Public"
+          },
+          "open": {
+            "type": "boolean",
+            "title": "Open"
+          },
+          "cancelled": {
+            "type": "boolean",
+            "title": "Cancelled"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/User"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes"
+          },
+          "auto_approve_registrants": {
+            "type": "boolean",
+            "title": "Auto Approve Registrants"
+          },
+          "auto_approve_waiters": {
+            "type": "boolean",
+            "title": "Auto Approve Waiters"
+          },
+          "agreements": {
+            "items": {
+              "$ref": "#/components/schemas/Agreement"
+            },
+            "type": "array",
+            "title": "Agreements"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "description",
+          "location",
+          "start",
+          "end",
+          "public",
+          "open",
+          "cancelled",
+          "completed",
+          "contact",
+          "capacity",
+          "notes",
+          "auto_approve_registrants",
+          "auto_approve_waiters"
+        ],
+        "title": "StoredOpportunity",
+        "description": "An Opportunity in the data layer"
+      },
+      "StoredOrganization": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "website": {
+            "type": "string",
+            "title": "Website"
+          },
+          "contact": {
+            "type": "string",
+            "title": "Contact"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "format": "phone",
+            "title": "Phone"
+          },
+          "private_allowed": {
+            "type": "boolean",
+            "title": "Private Allowed"
+          },
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "website",
+          "contact",
+          "email",
+          "phone",
+          "private_allowed",
+          "approved"
+        ],
+        "title": "StoredOrganization",
+        "description": "An Organization in the data layer"
+      },
+      "StoredParticipant": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "opportunity": {
+            "$ref": "#/components/schemas/Opportunity"
+          },
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          },
+          "cancelled": {
+            "type": "boolean",
+            "title": "Cancelled"
+          },
+          "attended": {
+            "type": "boolean",
+            "title": "Attended"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "opportunity",
+          "approved",
+          "cancelled",
+          "attended"
+        ],
+        "title": "StoredParticipant",
+        "description": "A Participant in the data layer"
+      },
+      "StoredRole": {
+        "properties": {
+          "organization": {
+            "$ref": "#/components/schemas/Organization"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "type": {
+            "$ref": "#/components/schemas/RoleType"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organization",
+          "user",
+          "type"
+        ],
+        "title": "StoredRole",
+        "description": "A Role in the data layer"
+      },
+      "StoredUser": {
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "title": "Last Name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "email_reminders": {
+            "type": "boolean",
+            "title": "Email Reminders"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "phone_reminders": {
+            "type": "boolean",
+            "title": "Phone Reminders"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "updated": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "first_name",
+          "last_name",
+          "email",
+          "email_reminders",
+          "phone",
+          "phone_reminders"
+        ],
+        "title": "StoredUser",
+        "description": "A User in the data layer"
+      },
+      "User": {
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "title": "Last Name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "email_reminders": {
+            "type": "boolean",
+            "title": "Email Reminders"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "phone_reminders": {
+            "type": "boolean",
+            "title": "Phone Reminders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "first_name",
+          "last_name",
+          "email",
+          "email_reminders",
+          "phone",
+          "phone_reminders"
+        ],
+        "title": "User",
+        "description": "A User is a person with an email address who participates in Opportunities\n\nUsers by default have no role, and one can be assumed if the role is granted\non a per-organization basis. For example, a user may be a volunteer for one\norganization and a manager for another."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

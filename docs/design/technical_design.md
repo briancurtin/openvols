@@ -147,19 +147,8 @@ or our likely choice of Fly.io [Cron Manager](https://fly.io/docs/blueprints/tas
 
 ## Data model
 
-```mermaid
-treeView-beta
-my-project/
-  src/
-      components/
-          Button.tsx
-          Header.tsx
-      App.tsx
-      index.js
-  .gitignore
-  package.json
-  README.md
-```
+See [openvols.models](../../src/openvols/models.py) for Pydantic-based models.
+
 ## REST API
 
 ### Versioning
@@ -168,7 +157,26 @@ API versioning is handled through the `X-OpenVols-API-Version` header,
 which defaults to the latest if not set. The versioning scheme is date-based,
 using `YYYY-MM-DD` format, such as `2026-08-17`.
 
+### Spec
+
+See [OpenAPI Spec](../openapi.json) for the full specification. This is available
+from a running instance at the `/docs` route.
 
 ## Observability
 
+OpenTelemetry, or OTel, will be used to observe the systems within OpenVols.
+All routes should use OTel to track metrics and traces, to be collected by
+an OTel Collector, and ingested by some metrics service. For the platform,
+no specific metrics service is defined, so deployers can choose.
+
+Deployments will then decide how to ingest the metrics, such as tracking SLOs.
+
 ## Testing
+
+The backend systems should be sufficiently tested using `pytest` and any helpful
+fixtures to enable unit and integration testing. FastAPI, for example, provides
+its own fixtures that enable easier testing of the HTTP layer. Testing in
+the data layer of the Postgres integration will require some running Postgres
+instance, likely via Docker Compose. TBD.
+
+Front testing: TBD
