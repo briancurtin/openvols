@@ -9,6 +9,7 @@ than an application-level advisory lock, since the opportunity row we need
 to lock is already the row we have to read for its capacity.
 """
 
+import builtins
 import datetime
 import uuid
 from typing import Self
@@ -55,7 +56,10 @@ class _SimpleRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]
             raise data.NotFoundError(self._stored_cls.__name__, id)
         return self._stored_cls(**dict(row))
 
-    async def list(self) -> list[StoredT]:
+    # `builtins.list`: see the comment on Repository.list in data/_store.py --
+    # a bare `list` here would resolve to this method itself once Python 3.14
+    # lazily evaluates the annotation.
+    async def list(self) -> builtins.list[StoredT]:
         rows = await self._store.pool.fetch(f"SELECT * FROM {self._table} ORDER BY created")
         return [self._stored_cls(**dict(row)) for row in rows]
 
@@ -120,7 +124,7 @@ class _RoleRepository:
             raise data.NotFoundError("StoredRole", id)
         return models.StoredRole(**dict(row))
 
-    async def list(self) -> list[models.StoredRole]:
+    async def list(self) -> builtins.list[models.StoredRole]:
         rows = await self._store.pool.fetch("SELECT * FROM roles ORDER BY created")
         return [models.StoredRole(**dict(row)) for row in rows]
 
@@ -164,7 +168,7 @@ class _LocationRepository:
     async def get(self, id: str) -> models.StoredLocation:
         return await self._repository.get(id)
 
-    async def list(self) -> list[models.StoredLocation]:
+    async def list(self) -> builtins.list[models.StoredLocation]:
         return await self._repository.list()
 
     async def update(self, id: str, item: models.Location) -> models.StoredLocation:
@@ -194,7 +198,7 @@ class _AgreementRepository:
     async def get(self, id: str) -> models.StoredAgreement:
         return await self._repository.get(id)
 
-    async def list(self) -> list[models.StoredAgreement]:
+    async def list(self) -> builtins.list[models.StoredAgreement]:
         return await self._repository.list()
 
     async def update(self, id: str, item: models.Agreement) -> models.StoredAgreement:
@@ -249,8 +253,13 @@ class _OpportunityRepository:
     _ParticipantRepository.register/cancel for the first).
     """
 
-    def __init__(self, store: PostgresStore):
+    def __init__(self, store: PostgresStore, participants: _ParticipantRepository):
         self._store = store
+        # Held as the concrete type (not reached via self._store.participants,
+        # which is typed as the public data.ParticipantRepository protocol)
+        # because update() below needs _promote_waitlist(), deliberately left
+        # off that protocol -- see _ParticipantRepository's docstring.
+        self._participants = participants
 
     async def _validate(self, item: models.Opportunity) -> None:
         await self._store.locations.get(item.location_id)
@@ -258,7 +267,9 @@ class _OpportunityRepository:
         for agreement_id in item.agreement_ids:
             await self._store.agreements.get(agreement_id)
 
-    async def _agreement_ids(self, conn: asyncpg.pool.PoolConnectionProxy, id: str) -> list[str]:
+    async def _agreement_ids(
+        self, conn: asyncpg.pool.PoolConnectionProxy, id: str
+    ) -> builtins.list[str]:
         rows = await conn.fetch(
             "SELECT agreement_id FROM opportunity_agreements WHERE opportunity_id = $1 "
             "ORDER BY agreement_id",
@@ -296,7 +307,7 @@ class _OpportunityRepository:
             agreement_ids = await self._agreement_ids(conn, id)
         return _opportunity_from_row(row, agreement_ids)
 
-    async def list(self) -> list[models.StoredOpportunity]:
+    async def list(self) -> builtins.list[models.StoredOpportunity]:
         async with self._store.pool.acquire() as conn:
             rows = await conn.fetch("SELECT * FROM opportunities ORDER BY created")
             return [
@@ -336,7 +347,7 @@ class _OpportunityRepository:
                     agreement_id,
                 )
 
-            await self._store.participants._promote_waitlist(conn, id)
+            await self._participants._promote_waitlist(conn, id)
 
         return _opportunity_from_row(row, list(item.agreement_ids))
 
@@ -370,7 +381,7 @@ class _ParticipantRepository:
             raise data.NotFoundError("StoredParticipant", id)
         return self._from_row(row)
 
-    async def list(self) -> list[models.StoredParticipant]:
+    async def list(self) -> builtins.list[models.StoredParticipant]:
         rows = await self._store.pool.fetch("SELECT * FROM participants ORDER BY created")
         return [self._from_row(row) for row in rows]
 
@@ -533,8 +544,10 @@ class PostgresStore:
         self.roles: data.RoleRepository = _RoleRepository(self)
         self.locations: data.LocationRepository = _LocationRepository(self)
         self.agreements: data.AgreementRepository = _AgreementRepository(self)
-        self.opportunities: data.OpportunityRepository = _OpportunityRepository(self)
         self.participants: data.ParticipantRepository = _ParticipantRepository(self)
+        self.opportunities: data.OpportunityRepository = _OpportunityRepository(
+            self, self.participants
+        )
 
     @property
     def pool(self) -> asyncpg.Pool:

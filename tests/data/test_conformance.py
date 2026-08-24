@@ -153,7 +153,7 @@ async def test_capacity_increase_promotes_waitlisted_participant(store):
     await store.participants.register(first.id, opportunity.id)
     waitlisted = await store.participants.register(second.id, opportunity.id)
 
-    expanded = models.Opportunity(**{**opportunity.model_dump(), "capacity": 2})
+    expanded = _opportunity(opportunity.location_id, opportunity.contact_id, capacity=2)
     await store.opportunities.update(opportunity.id, expanded)
 
     promoted = await store.participants.get(waitlisted.id)

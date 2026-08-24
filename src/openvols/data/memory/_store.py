@@ -8,6 +8,7 @@ Python's single-threaded event loop, which is sufficient for tests but not a
 substitute for a real backend's locking.
 """
 
+import builtins
 import datetime
 import uuid
 from typing import Self
@@ -38,7 +39,10 @@ class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseMode
         except KeyError:
             raise data.NotFoundError(self._stored_cls.__name__, id) from None
 
-    async def list(self) -> list[StoredT]:
+    # `builtins.list`: see the comment on Repository.list in data/_store.py --
+    # a bare `list` here would resolve to this method itself once Python 3.14
+    # lazily evaluates the annotation.
+    async def list(self) -> builtins.list[StoredT]:
         return list(self._items.values())
 
     async def update(self, id: str, item: InputT) -> StoredT:
@@ -80,7 +84,7 @@ class _RoleRepository:
     async def get(self, id: str) -> models.StoredRole:
         return await self._repository.get(id)
 
-    async def list(self) -> list[models.StoredRole]:
+    async def list(self) -> builtins.list[models.StoredRole]:
         return await self._repository.list()
 
     async def update(self, id: str, item: models.Role) -> models.StoredRole:
@@ -107,7 +111,7 @@ class _LocationRepository:
     async def get(self, id: str) -> models.StoredLocation:
         return await self._repository.get(id)
 
-    async def list(self) -> list[models.StoredLocation]:
+    async def list(self) -> builtins.list[models.StoredLocation]:
         return await self._repository.list()
 
     async def update(self, id: str, item: models.Location) -> models.StoredLocation:
@@ -134,7 +138,7 @@ class _AgreementRepository:
     async def get(self, id: str) -> models.StoredAgreement:
         return await self._repository.get(id)
 
-    async def list(self) -> list[models.StoredAgreement]:
+    async def list(self) -> builtins.list[models.StoredAgreement]:
         return await self._repository.list()
 
     async def update(self, id: str, item: models.Agreement) -> models.StoredAgreement:
@@ -167,7 +171,7 @@ class _ParticipantRepository:
         except KeyError:
             raise data.NotFoundError("StoredParticipant", id) from None
 
-    async def list(self) -> list[models.StoredParticipant]:
+    async def list(self) -> builtins.list[models.StoredParticipant]:
         return list(self._items.values())
 
     async def update(self, id: str, item: models.Participant) -> models.StoredParticipant:
@@ -271,9 +275,9 @@ class _OpportunityRepository:
     def __init__(
         self,
         repository: _InMemoryRepository[models.StoredOpportunity, models.Opportunity],
-        locations: _InMemoryRepository[models.StoredLocation, models.Location],
+        locations: data.LocationRepository,
         users: _InMemoryRepository[models.StoredUser, models.User],
-        agreements: _InMemoryRepository[models.StoredAgreement, models.Agreement],
+        agreements: data.AgreementRepository,
         participants: _ParticipantRepository,
     ):
         self._repository = repository
@@ -295,7 +299,7 @@ class _OpportunityRepository:
     async def get(self, id: str) -> models.StoredOpportunity:
         return await self._repository.get(id)
 
-    async def list(self) -> list[models.StoredOpportunity]:
+    async def list(self) -> builtins.list[models.StoredOpportunity]:
         return await self._repository.list()
 
     async def update(self, id: str, item: models.Opportunity) -> models.StoredOpportunity:
