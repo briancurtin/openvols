@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+"""Render a markdown coverage summary, optionally diffed against a base run.
+
+Used in CI to post a PR comment showing whether a change increased,
+decreased, or left total test coverage unchanged.
+"""
+
+import argparse
+import json
+
+MARKER = "<!-- openvols-coverage-diff -->"
+
+
+def total_percent(coverage_json_path: str) -> float:
+    with open(coverage_json_path) as f:
+        return json.load(f)["totals"]["percent_covered"]
+
+
+def render(head_percent: float, base_percent: float | None) -> str:
+    lines = [MARKER, "## Test coverage", ""]
+
+    if base_percent is None:
+        lines.append(f"**{head_percent:.2f}%**")
+        return "\n".join(lines)
+
+    delta = head_percent - base_percent
+    if delta > 0.005:
+        direction = f"⬆️ increased by {delta:.2f}pp"
+    elif delta < -0.005:
+        direction = f"⬇️ decreased by {abs(delta):.2f}pp"
+    else:
+        direction = "➡️ unchanged"
+
+    lines.append(f"**{head_percent:.2f}%** ({direction}, was {base_percent:.2f}%)")
+    return "\n".join(lines)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("head", help="coverage.json produced against the branch under test")
+    parser.add_argument(
+        "base", nargs="?", default=None, help="coverage.json produced against the base branch"
+    )
+    args = parser.parse_args()
+
+    head_percent = total_percent(args.head)
+    base_percent = total_percent(args.base) if args.base else None
+    print(render(head_percent, base_percent))
+
+
+if __name__ == "__main__":
+    main()
