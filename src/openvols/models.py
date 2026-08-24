@@ -1,19 +1,56 @@
-import pydantic
+"""
+Base models for the OpenVols system
 
-from datetime import datetime
+These represent the most detailed view of the objects from the lowest level
+and are what the data store works with. Higher levels, such as inputs and outputs
+in the HTTP layer will be subsets of these.
+"""
+
 import enum
+from datetime import datetime
+
+import pydantic
+from pydantic_extra_types.phone_numbers import PhoneNumber
+
+
+class USPhoneNumber(PhoneNumber):
+    """
+    Limit supported phone numbers to US-only for now
+
+    NOTE: This will convert '123-456-7890' to '(123) 456-7890' during creation
+
+    This was taken verbatim from the PhoneNumber documentation
+    """
+
+    default_region_code = "US"
+    # pydantic knows how to work with mutable default arguments
+    supported_regions = ["US"]  # noqa: RUF012
+    phone_format = "NATIONAL"
+
+
+class StoredModel(pydantic.BaseModel):
+    """An object that exists in the database"""
+
+    id: str = ""
+    created: datetime | None = None
+    updated: datetime | None = None
 
 
 class Organization(pydantic.BaseModel):
-    id: str
+    """An organization to create. Requires approval."""
+
     name: str
     description: str
     website: str
     contact: str
     email: str
-    phone: str
+    phone: USPhoneNumber
     private_allowed: bool
     approved: bool
+
+
+class StoredOrganization(StoredModel, Organization):
+    """An Organization in the data layer"""
 
 
 class User(pydantic.BaseModel):
@@ -25,28 +62,28 @@ class User(pydantic.BaseModel):
     organization and a manager for another.
     """
 
-    id: str
     first_name: str
     last_name: str
-    email: str
+    email: pydantic.EmailStr
     email_reminders: bool
     phone: str
     phone_reminders: bool
 
 
-class Role(enum.StrEnum):
-    """
-    A Role is a set of permissions granted to a User for an Organization.
-
-    Users default to having no role and no permissions.
-    """
-
-    MANAGER = "manager"
-    ADMIN = "admin"
-    SUPER_ADMIN = "super_admin"
+class StoredUser(StoredModel, User):
+    """A User in the data layer"""
 
 
-class UserRole(pydantic.BaseModel):
+class RoleType(enum.Enum):
+    """A RoleType is a the level permission granted to a User for an Organization."""
+
+    USER = 0
+    MANAGER = 1
+    ADMIN = 2
+    SUPER_ADMIN = 99
+
+
+class Role(pydantic.BaseModel):
     """
     A User may have a role for a given Organization
 
@@ -59,14 +96,20 @@ class UserRole(pydantic.BaseModel):
     * Managers can manage Opportunities and Participants.
     """
 
-    id: str
     organization: Organization
     user: User
-    role: Role
+    type: RoleType
+
+
+class StoredRole(StoredModel, Role):
+    """A Role in the data layer"""
 
 
 class Location(pydantic.BaseModel):
-    id: str
+    """
+    A Location is the place where an Opportunity will take place
+    """
+
     organization: Organization
     name: str
     address: str
@@ -74,6 +117,10 @@ class Location(pydantic.BaseModel):
     state: str
     postal_code: str
     country: str
+
+
+class StoredLocation(StoredModel, Location):
+    """A Location in the data layer"""
 
 
 class AgreementCadence(enum.StrEnum):
@@ -102,7 +149,6 @@ class Agreement(pydantic.BaseModel):
     are modified after a user has accepted them, preserving history of the state at acceptance.
     """
 
-    id: str
     organization: Organization
     title: str
     description: str
@@ -110,6 +156,10 @@ class Agreement(pydantic.BaseModel):
     valid: datetime
     invalid: datetime
     cadence: AgreementCadence
+
+
+class StoredAgreement(StoredModel, Agreement):
+    """An Agreement in the data layer"""
 
 
 class Opportunity(pydantic.BaseModel):
@@ -140,7 +190,6 @@ class Opportunity(pydantic.BaseModel):
       in the opportunity. Each agreement specifies its acceptance cadence.
     """
 
-    id: str
     title: str
     description: str
     location: Location
@@ -155,7 +204,11 @@ class Opportunity(pydantic.BaseModel):
     notes: str
     auto_approve_registrants: bool
     auto_approve_waiters: bool
-    agreements: list[Agreement]
+    agreements: list[Agreement] = pydantic.Field(default_factory=list)
+
+
+class StoredOpportunity(StoredModel, Opportunity):
+    """An Opportunity in the data layer"""
 
 
 class Participant(pydantic.BaseModel):
@@ -170,9 +223,12 @@ class Participant(pydantic.BaseModel):
     * `attended` tracks whether or not the participant actually attended the opportunity.
     """
 
-    id: str
     user: User
     opportunity: Opportunity
     approved: bool
     cancelled: bool
     attended: bool
+
+
+class StoredParticipant(StoredModel, Participant):
+    """A Participant in the data layer"""
