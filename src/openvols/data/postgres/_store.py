@@ -10,8 +10,6 @@ to lock is already the row we have to read for its capacity.
 """
 
 import builtins
-import datetime
-import uuid
 from typing import Self
 
 import asyncpg
@@ -40,7 +38,11 @@ class _SimpleRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]
     async def create(self, item: InputT) -> StoredT:
         values = item.model_dump()
         placeholders = ", ".join(f"${i}" for i in range(1, len(self._columns) + 1))
-        query = f"INSERT INTO {self._table} ({', '.join(self._columns)}) VALUES ({placeholders}) RETURNING *"
+        query = f"""
+            INSERT INTO {self._table} ({", ".join(self._columns)})
+            VALUES ({placeholders}) RETURNING *
+            """
+
         row = await self._store.pool.fetchrow(query, *(values[column] for column in self._columns))
         assert row is not None
         return self._stored_cls(**dict(row))
@@ -225,7 +227,7 @@ def _opportunity_row_values(item: models.Opportunity) -> dict[str, object]:
 
 
 def _opportunity_from_row(
-    row: asyncpg.Record, agreement_ids: list[str]
+    row: asyncpg.Record, agreement_ids: list[int]
 ) -> models.StoredOpportunity:
     values = dict(row)
     values["start"] = values.pop("starts_at")
@@ -257,7 +259,7 @@ class _OpportunityRepository:
 
     async def _agreement_ids(
         self, conn: asyncpg.pool.PoolConnectionProxy, id: int
-    ) -> builtins.list[str]:
+    ) -> builtins.list[int]:
         rows = await conn.fetch(
             "SELECT agreement_id FROM opportunity_agreements WHERE opportunity_id = $1 "
             "ORDER BY agreement_id",
@@ -414,7 +416,7 @@ class _ParticipantRepository:
                 "WHERE opportunity_id = $1 AND approved AND NOT cancelled",
                 opportunity_id,
             )
-            now = datetime.datetime.now(datetime.UTC)
+
             row = await conn.fetchrow(
                 "INSERT INTO participants "
                 "(user_id, opportunity_id, approved, cancelled, attended) "

@@ -204,7 +204,7 @@ class Opportunity(pydantic.BaseModel):
     notes: str
     auto_approve_registrants: bool
     auto_approve_waiters: bool
-    agreement_ids: list[str] = pydantic.Field(default_factory=list)
+    agreement_ids: list[int] = pydantic.Field(default_factory=list)
 
 
 class StoredOpportunity(StoredModel, Opportunity):

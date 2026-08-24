@@ -1811,7 +1811,7 @@
           },
           "agreement_ids": {
             "items": {
-              "type": "string"
+              "type": "integer"
             },
             "type": "array",
             "title": "Agreement Ids"
@@ -2183,7 +2183,7 @@
           },
           "agreement_ids": {
             "items": {
-              "type": "string"
+              "type": "integer"
             },
             "type": "array",
             "title": "Agreement Ids"
