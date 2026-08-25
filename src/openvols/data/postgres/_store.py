@@ -623,6 +623,8 @@ class _ParticipantRepository:
                 opportunity_id,
             )
 
+            # BUG: Similar to inside of register, participant count is what
+            # could move. The opportunity row being locked is not enough.
             participant = await conn.fetchrow(
                 """SELECT approved, cancelled
                    FROM participants
