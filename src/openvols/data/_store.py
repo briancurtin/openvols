@@ -1,10 +1,12 @@
 """
-Data layer abstraction: the contract every storage backend must satisfy,
-the errors it signals, and the settings that select one.
+Data layer abstraction, using a generic Protocol
+
+Includes the contract every storage backend must satisfy, the errors it signals,
+and the settings that select one.
 
 openvols.api depends only on openvols.data (this module's contents, re-exported
 via data/__init__.py) -- never on a specific backend package. Repository
-protocols are structural (typing.Protocol), so a backend such as
+protocols are structural using typing.Protocol, so a backend such as
 openvols.data.postgres.PostgresStore or openvols.data.memory.MemoryStore
 satisfies Store without inheriting from anything defined here.
 """

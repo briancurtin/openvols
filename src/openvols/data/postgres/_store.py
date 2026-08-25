@@ -1,12 +1,11 @@
 """
 Postgres Store implementation, via asyncpg.
 
-Schema lives in openvols.data.postgres.migrations (applied with yoyo, see
-yoyo.ini). Concurrency control for the registration engine relies on a
-single row lock per operation -- see register()/cancel()/
-_OpportunityRepository.update() for the transaction boundaries -- rather
-than an application-level advisory lock, since the opportunity row we need
-to lock is already the row we have to read for its capacity.
+* Schema lives in openvols.data.postgres.migrations (applied with yoyo, see yoyo.ini).
+* Concurrency control for the registration engine relies on a single row lock per operation
+  * See register()/cancel()/ _OpportunityRepository.update() for the transaction boundaries
+  * This is used rather than an application-level advisory lock, since the opportunity row we need
+    to lock is already the row we have to read for its capacity.
 """
 
 import builtins
@@ -18,11 +17,12 @@ import pydantic
 from openvols import data, models
 
 
-class _SimpleRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
+class _BasicRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
     """
-    Shared CRUD for tables whose columns match the Pydantic model's field
-    names 1:1 -- organizations, users, locations, agreements. Roles,
-    opportunities, and participants each need more than a straight column
+    Shared CRUD for tables whose columns match the Pydantic model's field names 1:1
+    This includes organizations, users, locations, and agreements.
+
+    Roles, opportunities, and participants each need more than a straight column
     mapping (an enum conversion, joins/validation, or registration-engine
     logic), so they're written out directly instead of forced through this.
     """
@@ -144,7 +144,7 @@ class _LocationRepository:
 
     def __init__(self, store: PostgresStore):
         self._store = store
-        self._repository = _SimpleRepository(
+        self._repository = _BasicRepository(
             store,
             "locations",
             ("organization_id", "name", "address", "city", "state", "postal_code", "country"),
@@ -174,7 +174,7 @@ class _AgreementRepository:
 
     def __init__(self, store: PostgresStore):
         self._store = store
-        self._repository = _SimpleRepository(
+        self._repository = _BasicRepository(
             store,
             "agreements",
             ("organization_id", "title", "description", "content", "valid", "invalid", "cadence"),
@@ -492,7 +492,7 @@ class PostgresStore:
     def __init__(self, dsn: str):
         self._dsn = dsn
         self._pool: asyncpg.Pool | None = None
-        self.organizations: data.OrganizationRepository = _SimpleRepository(
+        self.organizations: data.OrganizationRepository = _BasicRepository(
             self,
             "organizations",
             (
@@ -507,7 +507,7 @@ class PostgresStore:
             ),
             models.StoredOrganization,
         )
-        self.users: data.UserRepository = _SimpleRepository(
+        self.users: data.UserRepository = _BasicRepository(
             self,
             "users",
             (

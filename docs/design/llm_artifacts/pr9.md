@@ -118,7 +118,7 @@ and, for `opportunities`/`participants`, the registration engine.
   avoid the reserved words `start`/`end` (stored as `starts_at`/`ends_at`) without
   needing to quote them throughout the query layer. `Opportunity.agreement_ids` is
   backed by a join table, `opportunity_agreements`.
-* **Query layer**: `_SimpleRepository[StoredT, InputT]` is a small generic helper for
+* **Query layer**: `_BasicRepository[StoredT, InputT]` is a small generic helper for
   tables whose columns map 1:1 onto model fields with no enum conversion --
   `organizations`, `users`, `locations`, `agreements`. `roles` is written out directly
   because `RoleType` is a plain `enum.Enum` (needs an explicit `.value` on write,
