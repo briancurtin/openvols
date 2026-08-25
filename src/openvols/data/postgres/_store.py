@@ -10,7 +10,7 @@ to lock is already the row we have to read for its capacity.
 """
 
 import builtins
-from typing import Self
+import typing
 
 import asyncpg
 import pydantic
@@ -534,7 +534,7 @@ class PostgresStore:
             raise RuntimeError("PostgresStore used before entering its async context")
         return self._pool
 
-    async def __aenter__(self) -> Self:
+    async def __aenter__(self) -> typing.Self:
         self._pool = await asyncpg.create_pool(self._dsn)
         return self
 

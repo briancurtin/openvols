@@ -10,7 +10,7 @@ satisfies Store without inheriting from anything defined here.
 """
 
 import builtins
-from typing import Literal, Protocol, Self
+import typing
 
 import pydantic_settings
 
@@ -44,14 +44,14 @@ class DataSettings(pydantic_settings.BaseSettings):
 
     model_config = pydantic_settings.SettingsConfigDict(env_prefix="OPENVOLS_DATA_")
 
-    backend: Literal["memory", "postgres"] = "memory"
+    backend: typing.Literal["memory", "postgres"] = "memory"
     postgres_dsn: str | None = None
 
 
 # ---- Repository protocols ----------------------------------------------------
 
 
-class Repository[StoredT, InputT](Protocol):
+class Repository[StoredT, InputT](typing.Protocol):
     """CRUD contract shared by every aggregate's repository."""
 
     async def create(self, item: InputT) -> StoredT: ...
@@ -66,27 +66,31 @@ class Repository[StoredT, InputT](Protocol):
     async def delete(self, id: int) -> None: ...
 
 
-class OrganizationRepository(Repository[models.StoredOrganization, models.Organization], Protocol):
+class OrganizationRepository(
+    Repository[models.StoredOrganization, models.Organization], typing.Protocol
+):
     pass
 
 
-class UserRepository(Repository[models.StoredUser, models.User], Protocol):
+class UserRepository(Repository[models.StoredUser, models.User], typing.Protocol):
     pass
 
 
-class RoleRepository(Repository[models.StoredRole, models.Role], Protocol):
+class RoleRepository(Repository[models.StoredRole, models.Role], typing.Protocol):
     pass
 
 
-class LocationRepository(Repository[models.StoredLocation, models.Location], Protocol):
+class LocationRepository(Repository[models.StoredLocation, models.Location], typing.Protocol):
     pass
 
 
-class AgreementRepository(Repository[models.StoredAgreement, models.Agreement], Protocol):
+class AgreementRepository(Repository[models.StoredAgreement, models.Agreement], typing.Protocol):
     pass
 
 
-class OpportunityRepository(Repository[models.StoredOpportunity, models.Opportunity], Protocol):
+class OpportunityRepository(
+    Repository[models.StoredOpportunity, models.Opportunity], typing.Protocol
+):
     """
     update() must trigger waitlist promotion when a change (e.g. a capacity
     increase) opens up approved slots. See ParticipantRepository for the
@@ -94,7 +98,7 @@ class OpportunityRepository(Repository[models.StoredOpportunity, models.Opportun
     """
 
 
-class ParticipantRepository(Protocol):
+class ParticipantRepository(typing.Protocol):
     """
     Does not inherit Repository's create(): the initial state (approved vs.
     waitlisted) is a registration engine decision, not a plain insert, so
@@ -117,7 +121,7 @@ class ParticipantRepository(Protocol):
     async def cancel(self, participant_id: int) -> None: ...
 
 
-class Store(Protocol):
+class Store(typing.Protocol):
     """
     The single abstraction openvols.api depends on. A concrete backend
     (openvols.data.postgres.PostgresStore, openvols.data.memory.MemoryStore, ...)
@@ -132,5 +136,5 @@ class Store(Protocol):
     opportunities: OpportunityRepository
     participants: ParticipantRepository
 
-    async def __aenter__(self) -> Self: ...
+    async def __aenter__(self) -> typing.Self: ...
     async def __aexit__(self, *exc: object) -> None: ...
