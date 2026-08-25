@@ -9,6 +9,10 @@ substitute for a real backend's locking.
 
 NOTE: Postgres uses generated int ids and triggers for created/updated,
 whereas this implements them here in the store module
+
+TODO: This probably needs something like a Named Lock to serialize access
+to register and waitlist promotion. In the Postgres implementation it uses
+row-level locking, so this should probably have a similar id-based concept.
 """
 
 import builtins
