@@ -45,7 +45,7 @@ class DataSettings(pydantic_settings.BaseSettings):
     model_config = pydantic_settings.SettingsConfigDict(env_prefix="OPENVOLS_DATA_")
 
     backend: typing.Literal["memory", "postgres"] = "memory"
-    postgres_dsn: str | None = None
+    postgres_dsn: str = ""
 
 
 # ---- Repository protocols ----------------------------------------------------
