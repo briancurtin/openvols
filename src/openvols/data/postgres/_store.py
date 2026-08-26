@@ -541,6 +541,11 @@ class _ParticipantRepository:
             # Lock the opportunity via FOR UPDATE while we have
             # the current capacity in order to decide whether or not this
             # participant is going to be waitlisted or registered straight away.
+            # Access to this row will be blocked by the lock, so anything below
+            # this can be considered locked by it as well.
+            # TODO: Investigate if there are any other manipulations
+            # of the participants row that could happen through some other path
+            # that could affect the latter portions of this transaction.
             opportunity = await conn.fetchrow(
                 """SELECT capacity
                    FROM opportunities
@@ -567,14 +572,6 @@ class _ParticipantRepository:
                 raise data.ConflictError(
                     f"user {user_id!r} is already registered for opportunity {opportunity_id!r}"
                 )
-
-            # BUG: We locked the opportunity to determine its total capacity
-            # but `participants` is the capcaity that matters for approval.
-            # At no point in here is `participants` a consistent target.
-            # 1. We could get that the user is inactive on L555 and another request
-            #    could be inserting/updating them.
-            # 2. We could get that two users are inactive in concurrent requests
-            #    with only one capacity slot but both could get it in L590.
 
             approved_count = await conn.fetchval(
                 """SELECT count(*)
@@ -623,8 +620,6 @@ class _ParticipantRepository:
                 opportunity_id,
             )
 
-            # BUG: Similar to inside of register, participant count is what
-            # could move. The opportunity row being locked is not enough.
             participant = await conn.fetchrow(
                 """SELECT approved, cancelled
                    FROM participants
