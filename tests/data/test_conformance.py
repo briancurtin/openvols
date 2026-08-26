@@ -52,7 +52,10 @@ def _location(organization_id: int) -> models.Location:
 def _opportunity(location_id: int, contact_id: int, capacity: int) -> models.Opportunity:
     return models.Opportunity(
         title="Park Cleanup",
-        description="Help clean up the park",
+        description=(
+            "Join volunteers for a community cleanup at the park: picking up litter, "
+            "weeding garden beds, repainting benches, and clearing walking trails."
+        ),
         location_id=location_id,
         start=datetime(2026, 6, 1, 9, tzinfo=UTC),
         end=datetime(2026, 6, 1, 12, tzinfo=UTC),
@@ -144,6 +147,19 @@ async def test_cancel_promotes_next_waitlisted_participant(store):
 
     promoted = await store.participants.get(waitlisted.id)
     assert promoted.approved is True
+
+
+async def test_cancel_clears_approved_flag(store):
+    opportunity = await _make_opportunity(store, capacity=5)
+    user = await store.users.create(_user("cancel-approved@example.org"))
+    participant = await store.participants.register(user.id, opportunity.id)
+    assert participant.approved is True
+
+    await store.participants.cancel(participant.id)
+
+    cancelled = await store.participants.get(participant.id)
+    assert cancelled.cancelled is True
+    assert cancelled.approved is False
 
 
 async def test_capacity_increase_promotes_waitlisted_participant(store):

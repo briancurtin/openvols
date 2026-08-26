@@ -633,7 +633,7 @@ class _ParticipantRepository:
 
             await conn.execute(
                 """UPDATE participants
-                   SET cancelled = TRUE
+                   SET cancelled = TRUE, approved = FALSE
                    WHERE id = $1;
                 """,
                 participant_id,

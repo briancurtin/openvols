@@ -16,7 +16,7 @@ row-level locking, so this should probably have a similar id-based concept.
 """
 
 import builtins
-import datetime
+from datetime import UTC, datetime
 from functools import partial
 from random import randint
 from typing import Self
@@ -36,7 +36,7 @@ class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseMode
         self._items: dict[int, StoredT] = {}
 
     async def create(self, item: InputT) -> StoredT:
-        now = datetime.datetime.now(datetime.UTC)
+        now = datetime.now(UTC)
         stored = self._stored_cls(id=NEW_ID(), created=now, updated=now, **item.model_dump())
         self._items[stored.id] = stored
         return stored
@@ -58,7 +58,7 @@ class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseMode
         stored = self._stored_cls(
             id=id,
             created=existing.created,
-            updated=datetime.datetime.now(datetime.UTC),
+            updated=datetime.now(UTC),
             **item.model_dump(),
         )
         self._items[id] = stored
@@ -187,7 +187,7 @@ class _ParticipantRepository:
         updated = models.StoredParticipant(
             id=id,
             created=existing.created,
-            updated=datetime.datetime.now(datetime.UTC),
+            updated=datetime.now(UTC),
             **item.model_dump(),
         )
         self._items[id] = updated
@@ -213,7 +213,7 @@ class _ParticipantRepository:
                     f"user {user_id!r} is already registered for opportunity {opportunity_id!r}"
                 )
 
-        now = datetime.datetime.now(datetime.UTC)
+        now = datetime.now(UTC)
         participant = models.StoredParticipant(
             id=NEW_ID(),
             created=now,
@@ -234,7 +234,11 @@ class _ParticipantRepository:
 
         was_approved = participant.approved
         self._items[participant_id] = participant.model_copy(
-            update={"cancelled": True, "updated": datetime.datetime.now(datetime.UTC)}
+            update={
+                "cancelled": True,
+                "approved": False,
+                "updated": datetime.now(UTC),
+            }
         )
         if was_approved:
             await self.promote_waitlist(participant.opportunity_id)
@@ -250,7 +254,7 @@ class _ParticipantRepository:
         if open_slots <= 0:
             return
 
-        now = datetime.datetime.now(datetime.UTC)
+        now = datetime.now(UTC)
         # dict preserves insertion order, so this walk is already FIFO.
         for participant_id, participant in self._items.items():
             if open_slots <= 0:

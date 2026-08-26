@@ -1353,6 +1353,7 @@
           },
           "title": {
             "type": "string",
+            "minLength": 10,
             "title": "Title"
           },
           "description": {
@@ -1753,10 +1754,12 @@
         "properties": {
           "title": {
             "type": "string",
+            "minLength": 10,
             "title": "Title"
           },
           "description": {
             "type": "string",
+            "minLength": 100,
             "title": "Description"
           },
           "location_id": {
@@ -1795,6 +1798,7 @@
           },
           "capacity": {
             "type": "integer",
+            "minimum": 0.0,
             "title": "Capacity"
           },
           "notes": {
@@ -1982,6 +1986,7 @@
           },
           "title": {
             "type": "string",
+            "minLength": 10,
             "title": "Title"
           },
           "description": {
@@ -2125,10 +2130,12 @@
         "properties": {
           "title": {
             "type": "string",
+            "minLength": 10,
             "title": "Title"
           },
           "description": {
             "type": "string",
+            "minLength": 100,
             "title": "Description"
           },
           "location_id": {
@@ -2167,6 +2174,7 @@
           },
           "capacity": {
             "type": "integer",
+            "minimum": 0.0,
             "title": "Capacity"
           },
           "notes": {
@@ -2452,7 +2460,15 @@
             "title": "Email Reminders"
           },
           "phone": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "phone"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Phone"
           },
           "phone_reminders": {
@@ -2494,7 +2510,6 @@
           "last_name",
           "email",
           "email_reminders",
-          "phone",
           "phone_reminders",
           "id"
         ],
@@ -2521,7 +2536,15 @@
             "title": "Email Reminders"
           },
           "phone": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "phone"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Phone"
           },
           "phone_reminders": {
@@ -2535,7 +2558,6 @@
           "last_name",
           "email",
           "email_reminders",
-          "phone",
           "phone_reminders"
         ],
         "title": "User",
