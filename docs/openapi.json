@@ -1864,8 +1864,15 @@
             "title": "Email"
           },
           "phone": {
-            "type": "string",
-            "format": "phone",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "phone"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Phone"
           },
           "private_allowed": {
@@ -1884,7 +1891,6 @@
           "website",
           "contact",
           "email",
-          "phone",
           "private_allowed",
           "approved"
         ],
@@ -2269,8 +2275,15 @@
             "title": "Email"
           },
           "phone": {
-            "type": "string",
-            "format": "phone",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "phone"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Phone"
           },
           "private_allowed": {
@@ -2317,7 +2330,6 @@
           "website",
           "contact",
           "email",
-          "phone",
           "private_allowed",
           "approved",
           "id"

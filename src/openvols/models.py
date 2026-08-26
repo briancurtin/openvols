@@ -45,7 +45,7 @@ class Organization(pydantic.BaseModel):
     website: str
     contact: str
     email: str
-    phone: USPhoneNumber
+    phone: USPhoneNumber | None = None
     private_allowed: bool
     approved: bool
 
