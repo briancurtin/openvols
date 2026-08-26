@@ -5,7 +5,7 @@ place a backend's actual behavior diverges from what Store promises, since
 openvols.api is written against the abstraction, not a specific backend.
 """
 
-import datetime
+from datetime import UTC, datetime
 
 import pytest
 
@@ -54,8 +54,8 @@ def _opportunity(location_id: int, contact_id: int, capacity: int) -> models.Opp
         title="Park Cleanup",
         description="Help clean up the park",
         location_id=location_id,
-        start=datetime.datetime(2026, 6, 1, 9, tzinfo=datetime.UTC),
-        end=datetime.datetime(2026, 6, 1, 12, tzinfo=datetime.UTC),
+        start=datetime(2026, 6, 1, 9, tzinfo=UTC),
+        end=datetime(2026, 6, 1, 12, tzinfo=UTC),
         public=True,
         open=True,
         cancelled=False,
@@ -73,6 +73,7 @@ async def _make_opportunity(store, capacity: int) -> models.StoredOpportunity:
     organization = await store.organizations.create(_organization())
     location = await store.locations.create(_location(organization.id))
     contact = await store.users.create(_user(f"contact-{organization.id}@example.org"))
+
     return await store.opportunities.create(_opportunity(location.id, contact.id, capacity))
 
 
