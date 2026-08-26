@@ -11,6 +11,19 @@ import pytest
 
 from openvols import models
 from openvols.data import ConflictError, NotFoundError
+from openvols.data.postgres import PostgresStore
+
+
+def _agreement(organization_id: int) -> models.Agreement:
+    return models.Agreement(
+        organization_id=organization_id,
+        title="Volunteer Waiver",
+        description="",
+        content="By participating you agree to the terms.",
+        valid=datetime(2026, 1, 1, tzinfo=UTC),
+        invalid=datetime(2027, 1, 1, tzinfo=UTC),
+        cadence=models.AgreementCadence.PER_OPPORTUNITY,
+    )
 
 
 def _organization() -> models.Organization:
@@ -208,3 +221,49 @@ async def test_cancel_is_idempotent(store):
 
     cancelled = await store.participants.get(participant.id)
     assert cancelled.cancelled is True
+
+
+# ---- Empty string / NULL round-tripping (issue #15) --------------------------
+
+
+async def test_organization_phone_optional(store):
+    without_phone = _organization()
+    without_phone.phone = None
+    organization = await store.organizations.create(without_phone)
+    assert organization.phone is None
+
+    fetched = await store.organizations.get(organization.id)
+    assert fetched.phone is None
+
+
+async def test_agreement_empty_description_stored_as_null(store):
+    organization = await store.organizations.create(_organization())
+    agreement = await store.agreements.create(_agreement(organization.id))
+    assert agreement.description == ""
+
+    fetched = await store.agreements.get(agreement.id)
+    assert fetched.description == ""
+
+    if not isinstance(store, PostgresStore):
+        return
+
+    raw_description = await store.pool.fetchval(
+        "SELECT description FROM agreements WHERE id = $1;", agreement.id
+    )
+    assert raw_description is None
+
+
+async def test_opportunity_empty_notes_stored_as_null(store):
+    opportunity = await _make_opportunity(store, capacity=1)
+    assert opportunity.notes == ""
+
+    fetched = await store.opportunities.get(opportunity.id)
+    assert fetched.notes == ""
+
+    if not isinstance(store, PostgresStore):
+        return
+
+    raw_notes = await store.pool.fetchval(
+        "SELECT notes FROM opportunities WHERE id = $1;", opportunity.id
+    )
+    assert raw_notes is None

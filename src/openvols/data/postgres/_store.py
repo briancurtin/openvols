@@ -28,16 +28,42 @@ class _BasicRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
     """
 
     def __init__(
-        self, store: PostgresStore, table: str, columns: tuple[str, ...], stored_cls: type[StoredT]
+        self,
+        store: PostgresStore,
+        table: str,
+        columns: tuple[str, ...],
+        stored_cls: type[StoredT],
+        empty_to_null: frozenset[str] = frozenset(),
     ):
         self._store = store
         self._table = table
         self._columns = columns
         self._stored_cls = stored_cls
+        self._empty_to_null = empty_to_null
+
+    def _row_values(self, item: InputT) -> dict[str, object]:
+        """model_dump(), with `""` mapped to `None` for columns that store it as NULL"""
+        values = item.model_dump()
+
+        for column in self._empty_to_null:
+            if values[column] == "":
+                values[column] = None
+
+        return values
+
+    def _model_from_row(self, row: asyncpg.Record) -> StoredT:
+        """Build the stored model from a row, mapping NULL back to `""` where it means empty"""
+        values = dict(row)
+
+        for column in self._empty_to_null:
+            if values[column] is None:
+                values[column] = ""
+
+        return self._stored_cls(**values)
 
     async def create(self, item: InputT) -> StoredT:
         """Insert an object and return its stored variant, which includes its id"""
-        values = item.model_dump()
+        values = self._row_values(item)
         placeholders = ", ".join(f"${i}" for i in range(1, len(self._columns) + 1))
 
         query = f"""
@@ -50,7 +76,7 @@ class _BasicRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
 
         assert row is not None
 
-        return self._stored_cls(**dict(row))
+        return self._model_from_row(row)
 
     async def get(self, id: int) -> StoredT:
         """Given an id, return the stored object if it exists"""
@@ -59,7 +85,7 @@ class _BasicRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
         if row is None:
             raise data.NotFoundError(self._stored_cls.__name__, id)
 
-        return self._stored_cls(**dict(row))
+        return self._model_from_row(row)
 
     # `builtins.list`: see the comment on Repository.list in data/_store.py --
     # a bare `list` here would resolve to this method itself once Python 3.14
@@ -70,10 +96,10 @@ class _BasicRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
         # based on that.
         rows = await self._store.pool.fetch(f"SELECT * FROM {self._table} ORDER BY created")
 
-        return [self._stored_cls(**dict(row)) for row in rows]
+        return [self._model_from_row(row) for row in rows]
 
     async def update(self, id: int, item: InputT) -> StoredT:
-        values = item.model_dump()
+        values = self._row_values(item)
         assignments = ", ".join(f"{column} = ${i + 1}" for i, column in enumerate(self._columns))
 
         query = f"""
@@ -89,7 +115,7 @@ class _BasicRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
         if row is None:
             raise data.NotFoundError(self._stored_cls.__name__, id)
 
-        return self._stored_cls(**dict(row))
+        return self._model_from_row(row)
 
     async def delete(self, id: int) -> None:
         result = await self._store.pool.execute(f"DELETE FROM {self._table} WHERE id = $1;", id)
@@ -232,6 +258,7 @@ class _AgreementRepository:
             "agreements",
             ("organization_id", "title", "description", "content", "valid", "invalid", "cadence"),
             models.StoredAgreement,
+            empty_to_null=frozenset({"description"}),
         )
 
     async def create(self, item: models.Agreement) -> models.StoredAgreement:
@@ -292,6 +319,9 @@ def _opportunity_row_values(item: models.Opportunity) -> dict[str, object]:
 
     del values["agreement_ids"]
 
+    if values["notes"] == "":
+        values["notes"] = None
+
     return values
 
 
@@ -302,6 +332,9 @@ def _opportunity_from_row(
     values = dict(row)
     values["start"] = values.pop("starts_at")
     values["end"] = values.pop("ends_at")
+
+    if values["notes"] is None:
+        values["notes"] = ""
 
     return models.StoredOpportunity(agreement_ids=agreement_ids, **values)
 
