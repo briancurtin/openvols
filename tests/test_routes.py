@@ -99,7 +99,10 @@ def agreement_body(organization_id):
 def opportunity_body(location_id, user_id):
     return {
         "title": "Park Cleanup",
-        "description": "Help clean up the park",
+        "description": (
+            "Join volunteers for a community cleanup at the park: picking up litter, "
+            "weeding garden beds, repainting benches, and clearing walking trails."
+        ),
         "location_id": location_id,
         "start": "2026-06-01T09:00:00Z",
         "end": "2026-06-01T12:00:00Z",
@@ -241,6 +244,7 @@ def test_cancel_participant(client, registered_participant):
 
     assert response.status_code == 200
     assert response.json()["cancelled"] is True
+    assert response.json()["approved"] is False
 
 
 def test_delete_participant(client, registered_participant):

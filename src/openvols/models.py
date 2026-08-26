@@ -7,7 +7,8 @@ in the HTTP layer will be subsets of these.
 """
 
 import enum
-from datetime import datetime
+import typing
+from datetime import UTC, datetime
 
 import pydantic
 from pydantic_extra_types.phone_numbers import PhoneNumber
@@ -66,8 +67,14 @@ class User(pydantic.BaseModel):
     last_name: str
     email: pydantic.EmailStr
     email_reminders: bool
-    phone: str
+    phone: USPhoneNumber | None = None
     phone_reminders: bool
+
+    @pydantic.model_validator(mode="after")
+    def _phone_reminders_require_phone(self) -> typing.Self:
+        if self.phone_reminders and self.phone is None:
+            raise ValueError("phone_reminders requires a phone number")
+        return self
 
 
 class StoredUser(StoredModel, User):
@@ -150,12 +157,18 @@ class Agreement(pydantic.BaseModel):
     """
 
     organization_id: int
-    title: str
+    title: str = pydantic.Field(min_length=10)
     description: str
     content: str
     valid: datetime
     invalid: datetime
     cadence: AgreementCadence
+
+    @pydantic.model_validator(mode="after")
+    def _invalid_after_valid(self) -> typing.Self:
+        if self.invalid <= self.valid:
+            raise ValueError("invalid must be after valid")
+        return self
 
 
 class StoredAgreement(StoredModel, Agreement):
@@ -190,8 +203,8 @@ class Opportunity(pydantic.BaseModel):
       in the opportunity. Each agreement specifies its own acceptance cadence.
     """
 
-    title: str
-    description: str
+    title: str = pydantic.Field(min_length=10)
+    description: str = pydantic.Field(min_length=100)
     location_id: int
     start: datetime
     end: datetime
@@ -200,11 +213,23 @@ class Opportunity(pydantic.BaseModel):
     cancelled: bool
     completed: bool
     contact_id: int
-    capacity: int
+    capacity: int = pydantic.Field(ge=0)
     notes: str
     auto_approve_registrants: bool
     auto_approve_waiters: bool
     agreement_ids: list[int] = pydantic.Field(default_factory=list)
+
+    @pydantic.model_validator(mode="after")
+    def _end_after_start(self) -> typing.Self:
+        if self.end <= self.start:
+            raise ValueError("end must be after start")
+        return self
+
+    @pydantic.model_validator(mode="after")
+    def _completed_requires_end_passed(self) -> typing.Self:
+        if self.completed and datetime.now(UTC) <= self.end:
+            raise ValueError("completed can't be True before end has passed")
+        return self
 
 
 class StoredOpportunity(StoredModel, Opportunity):
@@ -228,6 +253,14 @@ class Participant(pydantic.BaseModel):
     approved: bool
     cancelled: bool
     attended: bool
+
+    @pydantic.model_validator(mode="after")
+    def _cancelled_excludes_approved_and_attended(self) -> typing.Self:
+        if self.cancelled and self.approved:
+            raise ValueError("a participant can't be both approved and cancelled")
+        if self.cancelled and self.attended:
+            raise ValueError("a participant can't be both attended and cancelled")
+        return self
 
 
 class StoredParticipant(StoredModel, Participant):
