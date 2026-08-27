@@ -37,12 +37,25 @@ class StoredModel(pydantic.BaseModel):
     updated: datetime | None = None
 
 
+# Pydantic's HttpStr requires an explicit serialization step because
+# it's not internally a string. Because we want to work with this as `str`
+# throughout the app tier, we make use of the validation and then get to
+# deal with `str` throughout the app and data tiers without needing special
+# handling, e.g, converting to string for Postgres.
+StrictHttpStr = typing.Annotated[
+    str,
+    pydantic.BeforeValidator(
+        lambda v: str(pydantic.TypeAdapter(pydantic.HttpUrl).validate_python(v))
+    ),
+]
+
+
 class Organization(pydantic.BaseModel):
     """An organization to create. Requires approval."""
 
     name: str = pydantic.Field(min_length=3)  # Could be a three-letter acronym
     description: str = pydantic.Field(min_length=20)
-    website: str  # Possible to not have a website, I guess
+    website: StrictHttpStr | None = None
     contact: pydantic.EmailStr
     email: pydantic.EmailStr
     phone: USPhoneNumber | None = None
@@ -270,7 +283,7 @@ class Opportunity(pydantic.BaseModel):
     completed: bool
     contact_id: int
     capacity: int = pydantic.Field(ge=0)
-    notes: str
+    notes: str = ""
     auto_approve_registrants: bool
     auto_approve_waiters: bool
     agreement_ids: list[int] = pydantic.Field(default_factory=list)

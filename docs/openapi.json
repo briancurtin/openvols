@@ -1816,7 +1816,8 @@
           },
           "notes": {
             "type": "string",
-            "title": "Notes"
+            "title": "Notes",
+            "default": ""
           },
           "auto_approve_registrants": {
             "type": "boolean",
@@ -1847,7 +1848,6 @@
           "completed",
           "contact_id",
           "capacity",
-          "notes",
           "auto_approve_registrants",
           "auto_approve_waiters"
         ],
@@ -1867,7 +1867,14 @@
             "title": "Description"
           },
           "website": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Website"
           },
           "contact": {
@@ -1905,7 +1912,6 @@
         "required": [
           "name",
           "description",
-          "website",
           "contact",
           "email",
           "private_allowed",
@@ -2215,7 +2221,8 @@
           },
           "notes": {
             "type": "string",
-            "title": "Notes"
+            "title": "Notes",
+            "default": ""
           },
           "auto_approve_registrants": {
             "type": "boolean",
@@ -2274,7 +2281,6 @@
           "completed",
           "contact_id",
           "capacity",
-          "notes",
           "auto_approve_registrants",
           "auto_approve_waiters",
           "id"
@@ -2295,7 +2301,14 @@
             "title": "Description"
           },
           "website": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Website"
           },
           "contact": {
@@ -2361,7 +2374,6 @@
         "required": [
           "name",
           "description",
-          "website",
           "contact",
           "email",
           "private_allowed",
