@@ -258,7 +258,6 @@ class _AgreementRepository:
             "agreements",
             ("organization_id", "title", "description", "content", "valid", "invalid", "cadence"),
             models.StoredAgreement,
-            empty_to_null=frozenset({"description"}),
         )
 
     async def create(self, item: models.Agreement) -> models.StoredAgreement:

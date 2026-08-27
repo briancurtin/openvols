@@ -41,7 +41,7 @@ def _organization_kwargs(**overrides) -> dict:
         "name": "Example Organization",
         "description": "A volunteer organization",
         "website": "https://example.org",
-        "contact": "Jane Doe",
+        "contact": "jane@example.org",
         "email": "contact@example.org",
         "phone": "+12025550182",
         "private_allowed": False,
@@ -56,10 +56,24 @@ def _agreement_kwargs(**overrides) -> dict:
         "organization_id": 1,
         "title": "Volunteer Waiver",
         "description": "Standard liability waiver",
-        "content": "By participating you agree to the terms.",
+        "content": "By participating in this opportunity you agree to the terms outlined here.",
         "valid": datetime(2026, 1, 1, tzinfo=UTC),
         "invalid": datetime(2027, 1, 1, tzinfo=UTC),
         "cadence": models.AgreementCadence.PER_OPPORTUNITY,
+    }
+    kwargs.update(overrides)
+    return kwargs
+
+
+def _location_kwargs(**overrides) -> dict:
+    kwargs = {
+        "organization_id": 1,
+        "name": "Community Center",
+        "address": "123 Main St",
+        "city": "Springfield",
+        "state": "IL",
+        "postal_code": "62701",
+        "country": "US",
     }
     kwargs.update(overrides)
     return kwargs
@@ -120,6 +134,41 @@ def test_phone_reminders_with_valid_phone_always_succeeds(phone_reminders):
     assert user.phone_reminders is phone_reminders
 
 
+# Location
+
+
+def test_location_name_min():
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(name="no"))
+
+
+def test_location_address_min():
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(address="no"))
+
+
+def test_location_city_min():
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(city="no"))
+
+
+def test_location_state_invalid_value():
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(state="XX"))
+
+
+@pytest.mark.parametrize("length", [0, 1, 3, 4, 5])
+def test_location_state_wrong_length(length):
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(state="X" * length))
+
+
+@pytest.mark.parametrize("country", ["us", "usa", "Us", "USA"])
+def test_location_country_convert(country):
+    location = models.Location(**_location_kwargs(country=country))
+    assert location.country == "US"
+
+
 # ---- Organization ---------------------------------------------------------------
 
 
@@ -151,10 +200,16 @@ def test_agreement_title_too_short_rejected(length):
         models.Agreement(**_agreement_kwargs(title="x" * length))
 
 
-@given(length=st.integers(min_value=10, max_value=200))
+@given(length=st.integers(min_value=10, max_value=80))
 def test_agreement_title_min_length_accepted(length):
     agreement = models.Agreement(**_agreement_kwargs(title="x" * length))
     assert len(agreement.title) == length
+
+
+@given(length=st.integers(min_value=81, max_value=200))
+def test_agreement_title_too_long_rejected(length):
+    with pytest.raises(pydantic.ValidationError):
+        models.Agreement(**_agreement_kwargs(title="x" * length))
 
 
 # ---- Opportunity ------------------------------------------------------------------
