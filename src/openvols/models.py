@@ -40,11 +40,11 @@ class StoredModel(pydantic.BaseModel):
 class Organization(pydantic.BaseModel):
     """An organization to create. Requires approval."""
 
-    name: str
-    description: str
-    website: str
-    contact: str
-    email: str
+    name: str = pydantic.Field(min_length=3)  # Could be a three-letter acronym
+    description: str = pydantic.Field(min_length=20)
+    website: str  # Possible to not have a website, I guess
+    contact: pydantic.EmailStr
+    email: pydantic.EmailStr
     phone: USPhoneNumber | None = None
     private_allowed: bool
     approved: bool
@@ -63,8 +63,13 @@ class User(pydantic.BaseModel):
     organization and a manager for another.
     """
 
-    first_name: str
-    last_name: str
+    # This may have to be tested in the real world to see how it works out,
+    # but some people may just want to sign up with initials. That may not
+    # work with agreements, which could be binding, so there may need to be
+    # some more strict requirement here on names, and over there on accepting
+    # initials. TBD.
+    first_name: str = pydantic.Field(min_length=1)
+    last_name: str = pydantic.Field(min_length=1)
     email: pydantic.EmailStr
     email_reminders: bool
     phone: USPhoneNumber | None = None
@@ -112,18 +117,68 @@ class StoredRole(StoredModel, Role):
     """A Role in the data layer"""
 
 
+# fmt: off
+_US_STATES = {
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL",
+    "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT",
+    "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI",
+    "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+    "PR",  # Puerto Rico should be a state
+}
+# fmt: on
+
+
 class Location(pydantic.BaseModel):
     """
     A Location is the place where an Opportunity will take place
+
+    Currently only supports US addresses with:
+    * two-letter state
+    * five digit zip code
+    * hardcoded to US
     """
 
     organization_id: int
-    name: str
-    address: str
-    city: str
-    state: str
-    postal_code: str
-    country: str
+    name: str = pydantic.Field(min_length=4)  # Could be "main"
+    address: str = pydantic.Field(min_length=9)  # "1 main st" is the min
+    city: str = pydantic.Field(min_length=3)
+    state: str = pydantic.Field(min_length=2, max_length=2)
+    postal_code: str = pydantic.Field(min_length=5, max_length=5)
+    country: str = pydantic.Field(min_length=2, max_length=3)
+
+    @pydantic.field_validator("state")
+    def _validate_state(cls, value: str) -> str:
+        val = value.upper()
+        if val not in _US_STATES:
+            raise ValueError(f"{val} is not a US state")
+
+        return val
+
+    @pydantic.field_validator("postal_code")
+    def _validate_postal_code(cls, value: str) -> str:
+        """
+        postal_code is named to be international friendly but is strictly
+        for US zip codes right now. As such, it will be input as a string
+        and stored as a string, but we check that it would evaluate to an int
+        because US zip codes are numbers (with leading zeroes), and we want
+        to ensure we're storing something that could be a reasonable zip
+        instead of something like 'asdfg'.
+        """
+        try:
+            int(value)
+        except TypeError:
+            raise ValueError(f"{value} is not a US state")
+
+        return value
+
+    @pydantic.field_validator("country")
+    def _validate_country(cls, value: str) -> str:
+        """Coerce all forms of US or USA to US, and reject other countries"""
+
+        if value.upper() not in ("US", "USA"):
+            raise ValueError("This platform currently only supports US addresses")
+
+        return "US"
 
 
 class StoredLocation(StoredModel, Location):
@@ -157,9 +212,10 @@ class Agreement(pydantic.BaseModel):
     """
 
     organization_id: int
-    title: str = pydantic.Field(min_length=10)
-    description: str
-    content: str
+    title: str = pydantic.Field(min_length=10, max_length=80)
+    # Description is intended to be a sub-title, a sentence or two summary.
+    description: str = pydantic.Field(min_length=10, max_length=120)
+    content: str = pydantic.Field(min_length=50)
     valid: datetime
     invalid: datetime
     cadence: AgreementCadence

@@ -1353,15 +1353,19 @@
           },
           "title": {
             "type": "string",
+            "maxLength": 80,
             "minLength": 10,
             "title": "Title"
           },
           "description": {
             "type": "string",
+            "maxLength": 120,
+            "minLength": 10,
             "title": "Description"
           },
           "content": {
             "type": "string",
+            "minLength": 50,
             "title": "Content"
           },
           "valid": {
@@ -1701,26 +1705,35 @@
           },
           "name": {
             "type": "string",
+            "minLength": 4,
             "title": "Name"
           },
           "address": {
             "type": "string",
+            "minLength": 9,
             "title": "Address"
           },
           "city": {
             "type": "string",
+            "minLength": 3,
             "title": "City"
           },
           "state": {
             "type": "string",
+            "maxLength": 2,
+            "minLength": 2,
             "title": "State"
           },
           "postal_code": {
             "type": "string",
+            "maxLength": 5,
+            "minLength": 5,
             "title": "Postal Code"
           },
           "country": {
             "type": "string",
+            "maxLength": 3,
+            "minLength": 2,
             "title": "Country"
           }
         },
@@ -1735,7 +1748,7 @@
           "country"
         ],
         "title": "Location",
-        "description": "A Location is the place where an Opportunity will take place"
+        "description": "A Location is the place where an Opportunity will take place\n\nCurrently only supports US addresses with:\n* two-letter state\n* five digit zip code\n* hardcoded to US"
       },
       "LoginEmail": {
         "properties": {
@@ -1845,10 +1858,12 @@
         "properties": {
           "name": {
             "type": "string",
+            "minLength": 3,
             "title": "Name"
           },
           "description": {
             "type": "string",
+            "minLength": 20,
             "title": "Description"
           },
           "website": {
@@ -1857,10 +1872,12 @@
           },
           "contact": {
             "type": "string",
+            "format": "email",
             "title": "Contact"
           },
           "email": {
             "type": "string",
+            "format": "email",
             "title": "Email"
           },
           "phone": {
@@ -1992,15 +2009,19 @@
           },
           "title": {
             "type": "string",
+            "maxLength": 80,
             "minLength": 10,
             "title": "Title"
           },
           "description": {
             "type": "string",
+            "maxLength": 120,
+            "minLength": 10,
             "title": "Description"
           },
           "content": {
             "type": "string",
+            "minLength": 50,
             "title": "Content"
           },
           "valid": {
@@ -2067,26 +2088,35 @@
           },
           "name": {
             "type": "string",
+            "minLength": 4,
             "title": "Name"
           },
           "address": {
             "type": "string",
+            "minLength": 9,
             "title": "Address"
           },
           "city": {
             "type": "string",
+            "minLength": 3,
             "title": "City"
           },
           "state": {
             "type": "string",
+            "maxLength": 2,
+            "minLength": 2,
             "title": "State"
           },
           "postal_code": {
             "type": "string",
+            "maxLength": 5,
+            "minLength": 5,
             "title": "Postal Code"
           },
           "country": {
             "type": "string",
+            "maxLength": 3,
+            "minLength": 2,
             "title": "Country"
           },
           "id": {
@@ -2256,10 +2286,12 @@
         "properties": {
           "name": {
             "type": "string",
+            "minLength": 3,
             "title": "Name"
           },
           "description": {
             "type": "string",
+            "minLength": 20,
             "title": "Description"
           },
           "website": {
@@ -2268,10 +2300,12 @@
           },
           "contact": {
             "type": "string",
+            "format": "email",
             "title": "Contact"
           },
           "email": {
             "type": "string",
+            "format": "email",
             "title": "Email"
           },
           "phone": {
@@ -2456,10 +2490,12 @@
         "properties": {
           "first_name": {
             "type": "string",
+            "minLength": 1,
             "title": "First Name"
           },
           "last_name": {
             "type": "string",
+            "minLength": 1,
             "title": "Last Name"
           },
           "email": {
@@ -2532,10 +2568,12 @@
         "properties": {
           "first_name": {
             "type": "string",
+            "minLength": 1,
             "title": "First Name"
           },
           "last_name": {
             "type": "string",
+            "minLength": 1,
             "title": "Last Name"
           },
           "email": {

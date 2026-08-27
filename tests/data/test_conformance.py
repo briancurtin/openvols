@@ -18,8 +18,8 @@ def _agreement(organization_id: int) -> models.Agreement:
     return models.Agreement(
         organization_id=organization_id,
         title="Volunteer Waiver",
-        description="",
-        content="By participating you agree to the terms.",
+        description="Standard liability waiver",
+        content="By participating in this opportunity you agree to the terms outlined here.",
         valid=datetime(2026, 1, 1, tzinfo=UTC),
         invalid=datetime(2027, 1, 1, tzinfo=UTC),
         cadence=models.AgreementCadence.PER_OPPORTUNITY,
@@ -31,7 +31,7 @@ def _organization() -> models.Organization:
         name="Example Organization",
         description="A volunteer organization",
         website="https://example.org",
-        contact="Jane Doe",
+        contact="jane@example.org",
         email="contact@example.org",
         phone="+12025550182",
         private_allowed=False,
@@ -234,23 +234,6 @@ async def test_organization_phone_optional(store):
 
     fetched = await store.organizations.get(organization.id)
     assert fetched.phone is None
-
-
-async def test_agreement_empty_description_stored_as_null(store):
-    organization = await store.organizations.create(_organization())
-    agreement = await store.agreements.create(_agreement(organization.id))
-    assert agreement.description == ""
-
-    fetched = await store.agreements.get(agreement.id)
-    assert fetched.description == ""
-
-    if not isinstance(store, PostgresStore):
-        return
-
-    raw_description = await store.pool.fetchval(
-        "SELECT description FROM agreements WHERE id = $1;", agreement.id
-    )
-    assert raw_description is None
 
 
 async def test_opportunity_empty_notes_stored_as_null(store):
