@@ -167,8 +167,9 @@ used throughout the application tier. Nearly all strings are defined as `Field(m
 which don't support incoming `null`. If the UI or direct API access sends `null`, those will
 be rejected during validation in the API layer.
 
-It will need to be determined once there is some front-end work done to know the best way
-of handling `""` vs `null` for the handful of fields which can reasonably be empty.
+Currently only `phone` fields will accept `null` as an input because it has a default `None`.
+All other `str` fields in models need to be either omitted or given `""` in the JSON input
+when constructing the model.
 
 #### Between Python and Postgres
 
