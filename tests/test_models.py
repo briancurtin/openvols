@@ -177,6 +177,20 @@ def test_organization_phone_optional():
     assert organization.phone is None
 
 
+def test_organization_website_improper_format():
+    with pytest.raises(pydantic.ValidationError):
+        models.Organization(**_organization_kwargs(website="website.com"))
+
+
+def test_organization_website_omitted_default():
+    # The website column is now nullable
+    kwargs = _organization_kwargs()
+    kwargs.pop("website")
+
+    organization = models.Organization(**kwargs)
+    assert organization.website is None
+
+
 # ---- Agreement ------------------------------------------------------------------
 
 
@@ -291,6 +305,14 @@ def test_completed_requires_end_in_the_past(offset):
                 start=now + offset, end=now + offset + timedelta(hours=1), completed=True
             )
         )
+
+
+def test_opportunity_notes_omitted_default():
+    kwargs = _opportunity_kwargs()
+    kwargs.pop("notes")
+
+    opp = models.Opportunity(**kwargs)
+    assert opp.notes == ""
 
 
 # ---- Participant ------------------------------------------------------------------
