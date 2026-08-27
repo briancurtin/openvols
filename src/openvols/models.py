@@ -167,7 +167,7 @@ class Location(pydantic.BaseModel):
         try:
             int(value)
         except TypeError:
-            raise ValueError(f"{val} is not a US state")
+            raise ValueError(f"{value} is not a US state")
 
         return value
 

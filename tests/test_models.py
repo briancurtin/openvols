@@ -65,6 +65,20 @@ def _agreement_kwargs(**overrides) -> dict:
     return kwargs
 
 
+def _location_kwargs(**overrides) -> dict:
+    kwargs = {
+        "organization_id": 1,
+        "name": "Community Center",
+        "address": "123 Main St",
+        "city": "Springfield",
+        "state": "IL",
+        "postal_code": "62701",
+        "country": "US",
+    }
+    kwargs.update(overrides)
+    return kwargs
+
+
 def _opportunity_kwargs(**overrides) -> dict:
     kwargs = {
         "title": "Park Cleanup Day",
@@ -118,6 +132,41 @@ def test_phone_reminders_false_allows_missing_phone():
 def test_phone_reminders_with_valid_phone_always_succeeds(phone_reminders):
     user = models.User(**_user_kwargs(phone="+12025550182", phone_reminders=phone_reminders))
     assert user.phone_reminders is phone_reminders
+
+
+# Location
+
+
+def test_location_name_min():
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(name="no"))
+
+
+def test_location_address_min():
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(address="no"))
+
+
+def test_location_city_min():
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(city="no"))
+
+
+def test_location_state_invalid_value():
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(state="XX"))
+
+
+@pytest.mark.parametrize("length", [0, 1, 3, 4, 5])
+def test_location_state_wrong_length(length):
+    with pytest.raises(pydantic.ValidationError):
+        models.Location(**_location_kwargs(state="X" * length))
+
+
+@pytest.mark.parametrize("country", ["us", "usa", "Us", "USA"])
+def test_location_country_convert(country):
+    location = models.Location(**_location_kwargs(country=country))
+    assert location.country == "US"
 
 
 # ---- Organization ---------------------------------------------------------------
