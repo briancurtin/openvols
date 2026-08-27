@@ -188,7 +188,7 @@ def test_organization_website_omitted_default():
     kwargs.pop("website")
 
     organization = models.Organization(**kwargs)
-    assert organization.website == None
+    assert organization.website is None
 
 
 # ---- Agreement ------------------------------------------------------------------
