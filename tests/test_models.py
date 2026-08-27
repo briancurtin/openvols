@@ -36,6 +36,21 @@ def _user_kwargs(**overrides) -> dict:
     return kwargs
 
 
+def _organization_kwargs(**overrides) -> dict:
+    kwargs = {
+        "name": "Example Organization",
+        "description": "A volunteer organization",
+        "website": "https://example.org",
+        "contact": "Jane Doe",
+        "email": "contact@example.org",
+        "phone": "+12025550182",
+        "private_allowed": False,
+        "approved": True,
+    }
+    kwargs.update(overrides)
+    return kwargs
+
+
 def _agreement_kwargs(**overrides) -> dict:
     kwargs = {
         "organization_id": 1,
@@ -103,6 +118,14 @@ def test_phone_reminders_false_allows_missing_phone():
 def test_phone_reminders_with_valid_phone_always_succeeds(phone_reminders):
     user = models.User(**_user_kwargs(phone="+12025550182", phone_reminders=phone_reminders))
     assert user.phone_reminders is phone_reminders
+
+
+# ---- Organization ---------------------------------------------------------------
+
+
+def test_organization_phone_optional():
+    organization = models.Organization(**_organization_kwargs(phone=None))
+    assert organization.phone is None
 
 
 # ---- Agreement ------------------------------------------------------------------
