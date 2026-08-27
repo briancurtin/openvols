@@ -13,7 +13,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_login_api_auth_login_post"
+                "$ref": "#/components/schemas/LoginEmail"
               }
             }
           },
@@ -102,7 +102,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_organization_api_organizations_post"
+                "$ref": "#/components/schemas/Organization"
               }
             }
           },
@@ -189,7 +189,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_update_organization_api_organizations__organization_id__patch"
+                "$ref": "#/components/schemas/Organization"
               }
             }
           }
@@ -277,7 +277,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_user_api_users_post"
+                "$ref": "#/components/schemas/User"
               }
             }
           },
@@ -364,7 +364,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_update_user_api_users__user_id__patch"
+                "$ref": "#/components/schemas/User"
               }
             }
           }
@@ -452,7 +452,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_role_api_roles_post"
+                "$ref": "#/components/schemas/Role"
               }
             }
           },
@@ -539,7 +539,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_update_role_api_roles__role_id__patch"
+                "$ref": "#/components/schemas/Role"
               }
             }
           }
@@ -627,7 +627,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_location_api_locations_post"
+                "$ref": "#/components/schemas/Location"
               }
             }
           },
@@ -714,7 +714,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_update_location_api_locations__location_id__patch"
+                "$ref": "#/components/schemas/Location"
               }
             }
           }
@@ -802,7 +802,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_agreement_api_agreements_post"
+                "$ref": "#/components/schemas/Agreement"
               }
             }
           },
@@ -889,7 +889,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_update_agreement_api_agreements__agreement_id__patch"
+                "$ref": "#/components/schemas/Agreement"
               }
             }
           }
@@ -977,7 +977,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_opportunity_api_opportunities_post"
+                "$ref": "#/components/schemas/Opportunity"
               }
             }
           },
@@ -1064,7 +1064,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_update_opportunity_api_opportunities__opportunity_id__patch"
+                "$ref": "#/components/schemas/Opportunity"
               }
             }
           }
@@ -1152,7 +1152,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_participant_api_participants_post"
+                "$ref": "#/components/schemas/RegisterParticipant"
               }
             }
           },
@@ -1239,7 +1239,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_update_participant_api_participants__participant_id__patch"
+                "$ref": "#/components/schemas/Participant"
               }
             }
           }
@@ -1404,186 +1404,6 @@
         ],
         "title": "AgreementCadence",
         "description": "An AgreementCadence represents how often an agreement needs to be accepted.\n\n- Perpetual agreements are accepted once and do not expire.\n- Annual agreements must be accepted once per calendar year.\n- Per Opportunity agreements must be accepted per opportunity."
-      },
-      "Body_create_agreement_api_agreements_post": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Agreement"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_create_agreement_api_agreements_post"
-      },
-      "Body_create_location_api_locations_post": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Location"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_create_location_api_locations_post"
-      },
-      "Body_create_opportunity_api_opportunities_post": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Opportunity"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_create_opportunity_api_opportunities_post"
-      },
-      "Body_create_organization_api_organizations_post": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Organization"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_create_organization_api_organizations_post"
-      },
-      "Body_create_participant_api_participants_post": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/RegisterParticipant"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_create_participant_api_participants_post"
-      },
-      "Body_create_role_api_roles_post": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Role"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_create_role_api_roles_post"
-      },
-      "Body_create_user_api_users_post": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/User"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_create_user_api_users_post"
-      },
-      "Body_login_api_auth_login_post": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/LoginEmail"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_login_api_auth_login_post"
-      },
-      "Body_update_agreement_api_agreements__agreement_id__patch": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Agreement"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_update_agreement_api_agreements__agreement_id__patch"
-      },
-      "Body_update_location_api_locations__location_id__patch": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Location"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_update_location_api_locations__location_id__patch"
-      },
-      "Body_update_opportunity_api_opportunities__opportunity_id__patch": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Opportunity"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_update_opportunity_api_opportunities__opportunity_id__patch"
-      },
-      "Body_update_organization_api_organizations__organization_id__patch": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Organization"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_update_organization_api_organizations__organization_id__patch"
-      },
-      "Body_update_participant_api_participants__participant_id__patch": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Participant"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_update_participant_api_participants__participant_id__patch"
-      },
-      "Body_update_role_api_roles__role_id__patch": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/Role"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_update_role_api_roles__role_id__patch"
-      },
-      "Body_update_user_api_users__user_id__patch": {
-        "properties": {
-          "body": {
-            "$ref": "#/components/schemas/User"
-          }
-        },
-        "type": "object",
-        "required": [
-          "body"
-        ],
-        "title": "Body_update_user_api_users__user_id__patch"
       },
       "HTTPValidationError": {
         "properties": {
