@@ -167,6 +167,9 @@ used throughout the application tier. Nearly all strings are defined as `Field(m
 which don't support incoming `null`. If the UI or direct API access sends `null`, those will
 be rejected during validation in the API layer.
 
+It will need to be determined once there is some front-end work done to know the best way
+of handling `""` vs `null` for the handful of fields which can reasonably be empty.
+
 #### Between Python and Postgres
 
 The data layer handles all Postgres related functionality—connection pool, transactions,
