@@ -27,9 +27,15 @@ to participate in opportunities to serve their community.
 ## System architecture
 
 At a high level, the system includes:
+Pesentation tier:
 * Browser-based UI
+
+Application tier:
 * REST API service that integrates with a database and backs the UI
 * Notification service that sends email and SMS reminders
+
+Data tier:
+* Relational database, e.g., Postgres
 
 ```mermaid
 C4Context
@@ -148,6 +154,43 @@ or our likely choice of Fly.io [Cron Manager](https://fly.io/docs/blueprints/tas
 ## Data model
 
 See [openvols.models](../../src/openvols/models.py) for Pydantic-based models.
+
+### Type boundaries
+
+The application tier, built in Python and consisting of the REST API and Notification systems,
+communicates bidirectionally with the presentation and data tiers, via layers in the system.
+
+#### Between Python and JSON
+
+The API layer speaks JSON to and from the UI, and does so neatly via the Pydantic models
+used throughout the application tier. Nearly all strings are defined as `Field(min_length=n)`,
+which don't support incoming `null`. If the UI or direct API access sends `null`, those will
+be rejected during validation in the API layer.
+
+#### Between Python and Postgres
+
+The data layer handles all Postgres related functionality—connection pool, transactions,
+and queries, along with serialization and deserialization between Postgres and Python types.
+A lot of this is handled automatically by `asyncpg`'s
+[type conversion](https://magicstack.github.io/asyncpg/current/usage.html#type-conversion).
+
+What that conversion does is a 1:1 mapping to the column type, which is not always what we want.
+In order to hold invariants within the Python code, we need a few translations.
+
+| From Python | To Postgres column | Back to Python |
+|-------------|--------------------|----------------|
+| `"hi"`      | `TEXT NOT NULL`    | `"hi"`         |
+| `"hey"`     | `TEXT` (nullable)  | `"hey"`        |
+| `""`        | `TEXT` (nullable)  | `""`           |
+
+We don't want `None` coming back from nullable columns, except in one case: Phone Numbers.
+In data model there are places we use a Pydantic type called `USPhoneNumbers` that
+is optionally `None`. Except for that case, strings should roundtrip through the data tier.
+
+A little about why: Storage-wise, a nullable column takes 1 bit of the already allocated
+null bitmap on a row, so it's basically free (to a point). Storing `""` is at least 1 byte.
+There are also impacts from the query analyzer in how it handles these columns when they're
+used in conditionals.
 
 ## REST API
 
