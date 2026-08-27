@@ -41,7 +41,7 @@ def _organization_kwargs(**overrides) -> dict:
         "name": "Example Organization",
         "description": "A volunteer organization",
         "website": "https://example.org",
-        "contact": "Jane Doe",
+        "contact": "jane@example.org",
         "email": "contact@example.org",
         "phone": "+12025550182",
         "private_allowed": False,
@@ -56,7 +56,7 @@ def _agreement_kwargs(**overrides) -> dict:
         "organization_id": 1,
         "title": "Volunteer Waiver",
         "description": "Standard liability waiver",
-        "content": "By participating you agree to the terms.",
+        "content": "By participating in this opportunity you agree to the terms outlined here.",
         "valid": datetime(2026, 1, 1, tzinfo=UTC),
         "invalid": datetime(2027, 1, 1, tzinfo=UTC),
         "cadence": models.AgreementCadence.PER_OPPORTUNITY,
@@ -151,10 +151,16 @@ def test_agreement_title_too_short_rejected(length):
         models.Agreement(**_agreement_kwargs(title="x" * length))
 
 
-@given(length=st.integers(min_value=10, max_value=200))
+@given(length=st.integers(min_value=10, max_value=80))
 def test_agreement_title_min_length_accepted(length):
     agreement = models.Agreement(**_agreement_kwargs(title="x" * length))
     assert len(agreement.title) == length
+
+
+@given(length=st.integers(min_value=81, max_value=200))
+def test_agreement_title_too_long_rejected(length):
+    with pytest.raises(pydantic.ValidationError):
+        models.Agreement(**_agreement_kwargs(title="x" * length))
 
 
 # ---- Opportunity ------------------------------------------------------------------
