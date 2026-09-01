@@ -39,7 +39,7 @@ def organization_body():
 
 @pytest.fixture
 def organization_id(client, organization_body):
-    return client.post("/api/organizations", json={"body": organization_body}).json()["id"]
+    return client.post("/api/organizations", json=organization_body).json()["id"]
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ def user_body():
 
 @pytest.fixture
 def user_id(client, user_body):
-    return client.post("/api/users", json={"body": user_body}).json()["id"]
+    return client.post("/api/users", json=user_body).json()["id"]
 
 
 @pytest.fixture
@@ -79,7 +79,7 @@ def location_body(organization_id):
 
 @pytest.fixture
 def location_id(client, location_body):
-    return client.post("/api/locations", json={"body": location_body}).json()["id"]
+    return client.post("/api/locations", json=location_body).json()["id"]
 
 
 @pytest.fixture
@@ -138,7 +138,7 @@ RESOURCES = [
 def test_create(client, request, resource, body_fixture):
     body = request.getfixturevalue(body_fixture)
 
-    response = client.post(f"/api/{resource}", json={"body": body})
+    response = client.post(f"/api/{resource}", json=body)
 
     assert response.status_code == 200
     assert response.json()["id"]
@@ -155,7 +155,7 @@ def test_list(client, resource, body_fixture):
 @pytest.mark.parametrize("resource, body_fixture", RESOURCES)
 def test_get(client, request, resource, body_fixture):
     body = request.getfixturevalue(body_fixture)
-    created = client.post(f"/api/{resource}", json={"body": body}).json()
+    created = client.post(f"/api/{resource}", json=body).json()
 
     response = client.get(f"/api/{resource}/{created['id']}")
 
@@ -173,9 +173,9 @@ def test_get_not_found(client, resource, body_fixture):
 @pytest.mark.parametrize("resource, body_fixture", RESOURCES)
 def test_update(client, request, resource, body_fixture):
     body = request.getfixturevalue(body_fixture)
-    created = client.post(f"/api/{resource}", json={"body": body}).json()
+    created = client.post(f"/api/{resource}", json=body).json()
 
-    response = client.patch(f"/api/{resource}/{created['id']}", json={"body": body})
+    response = client.patch(f"/api/{resource}/{created['id']}", json=body)
 
     assert response.status_code == 200
     assert response.json()["id"] == created["id"]
@@ -184,7 +184,7 @@ def test_update(client, request, resource, body_fixture):
 @pytest.mark.parametrize("resource, body_fixture", RESOURCES)
 def test_delete(client, request, resource, body_fixture):
     body = request.getfixturevalue(body_fixture)
-    created = client.post(f"/api/{resource}", json={"body": body}).json()
+    created = client.post(f"/api/{resource}", json=body).json()
 
     response = client.delete(f"/api/{resource}/{created['id']}")
 
@@ -198,12 +198,12 @@ def test_delete(client, request, resource, body_fixture):
 @pytest.fixture
 def registered_participant(client, user_body, opportunity_body):
     """Create a user and an opportunity, then register the user for it."""
-    user = client.post("/api/users", json={"body": user_body}).json()
-    opportunity = client.post("/api/opportunities", json={"body": opportunity_body}).json()
+    user = client.post("/api/users", json=user_body).json()
+    opportunity = client.post("/api/opportunities", json=opportunity_body).json()
 
     response = client.post(
         "/api/participants",
-        json={"body": {"user_id": user["id"], "opportunity_id": opportunity["id"]}},
+        json={"user_id": user["id"], "opportunity_id": opportunity["id"]},
     )
     return response.json()
 
@@ -231,9 +231,7 @@ def test_list_participants(client, registered_participant):
 def test_update_participant(client, registered_participant):
     body = {**registered_participant, "attended": True}
 
-    response = client.patch(
-        f"/api/participants/{registered_participant['id']}", json={"body": body}
-    )
+    response = client.patch(f"/api/participants/{registered_participant['id']}", json=body)
 
     assert response.status_code == 200
     assert response.json()["attended"] is True
@@ -256,20 +254,20 @@ def test_delete_participant(client, registered_participant):
 
 def test_registration_waitlists_over_capacity(client, user_body, opportunity_body):
     opportunity_body = {**opportunity_body, "capacity": 1}
-    opportunity = client.post("/api/opportunities", json={"body": opportunity_body}).json()
+    opportunity = client.post("/api/opportunities", json=opportunity_body).json()
 
-    first_user = client.post("/api/users", json={"body": user_body}).json()
+    first_user = client.post("/api/users", json=user_body).json()
     second_user = client.post(
-        "/api/users", json={"body": {**user_body, "email": "second@example.org"}}
+        "/api/users", json={**user_body, "email": "second@example.org"}
     ).json()
 
     first = client.post(
         "/api/participants",
-        json={"body": {"user_id": first_user["id"], "opportunity_id": opportunity["id"]}},
+        json={"user_id": first_user["id"], "opportunity_id": opportunity["id"]},
     ).json()
     second = client.post(
         "/api/participants",
-        json={"body": {"user_id": second_user["id"], "opportunity_id": opportunity["id"]}},
+        json={"user_id": second_user["id"], "opportunity_id": opportunity["id"]},
     ).json()
 
     assert first["approved"] is True
@@ -285,7 +283,7 @@ def test_registration_waitlists_over_capacity(client, user_body, opportunity_bod
 
 
 def test_login(client):
-    response = client.post("/api/auth/login", json={"body": {"email": "jane@example.org"}})
+    response = client.post("/api/auth/login", json={"email": "jane@example.org"})
 
     assert response.status_code == 200
 
