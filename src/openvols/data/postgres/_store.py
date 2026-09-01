@@ -142,7 +142,7 @@ class _RoleRepository:
     async def _validate(self, item: models.Role) -> None:
         # NOTE: The tasks are implicitly awaited at the exit of the context manager
         # and do not need to be assigned/awaited later since we don't need results.
-        async with asyncio.TaskGroup as group:
+        async with asyncio.TaskGroup() as group:
             group.create_task(self._store.organizations.get(item.organization_id))
             group.create_task(self._store.users.get(item.user_id))
 
