@@ -3,8 +3,9 @@ import typing
 
 import fastapi
 import fastapi.responses
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-from openvols import data
+from openvols import data, telemetry
 
 
 @contextlib.asynccontextmanager
@@ -15,6 +16,9 @@ async def lifespan(app: fastapi.FastAPI) -> typing.AsyncIterator[None]:
 
 
 app = fastapi.FastAPI(title="OpenVols API", lifespan=lifespan)
+FastAPIInstrumentor.instrument_app(
+    app, tracer_provider=telemetry.tracer_provider, meter_provider=telemetry.meter_provider
+)
 
 
 @app.exception_handler(data.NotFoundError)
