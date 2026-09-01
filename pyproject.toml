@@ -40,6 +40,7 @@ build-backend = "uv_build"
 dev = [
     "hypothesis>=6.165.10",
     "pytest-asyncio>=1.4.0",
+    "pytest-env>=1.7.0",
     "ruff>=0.16.1",
     "ty>=0.0.74",
 ]
@@ -67,3 +68,6 @@ show_missing = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+env = [
+    "OTEL_SDK_DISABLED = true"
+]
