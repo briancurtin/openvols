@@ -8,6 +8,7 @@ Postgres Store implementation, via asyncpg.
     to lock is already the row we have to read for its capacity.
 """
 
+import asyncio
 import builtins
 import typing
 
@@ -139,9 +140,11 @@ class _RoleRepository:
         self._store = store
 
     async def _validate(self, item: models.Role) -> None:
-        # TODO: TaskGroup
-        await self._store.organizations.get(item.organization_id)
-        await self._store.users.get(item.user_id)
+        # NOTE: The tasks are implicitly awaited at the exit of the context manager
+        # and do not need to be assigned/awaited later since we don't need results.
+        async with asyncio.TaskGroup() as group:
+            group.create_task(self._store.organizations.get(item.organization_id))
+            group.create_task(self._store.users.get(item.user_id))
 
     async def create(self, item: models.Role) -> models.StoredRole:
         """Create a Role and return the StoredRole variant"""
@@ -356,12 +359,15 @@ class _OpportunityRepository:
 
     async def _validate(self, item: models.Opportunity) -> None:
         """Validate that any nested/referenced objects within an Opportunity exist"""
-        # TODO: Run these queries concurrently. None of them reference incrementally available
-        # data, and they can all safely be requested concurrently.
-        await self._store.locations.get(item.location_id)
-        await self._store.users.get(item.contact_id)
-        for agreement_id in item.agreement_ids:
-            await self._store.agreements.get(agreement_id)
+
+        # NOTE: The tasks are implicitly awaited at the exit of the context manager
+        # and do not need to be assigned/awaited later since we don't need results.
+        async with asyncio.TaskGroup() as group:
+            group.create_task(self._store.locations.get(item.location_id))
+            group.create_task(self._store.users.get(item.contact_id))
+
+            for agreement_id in item.agreement_ids:
+                group.create_task(self._store.agreements.get(agreement_id))
 
     async def _agreement_ids(
         self, conn: asyncpg.pool.PoolConnectionProxy, id: int
