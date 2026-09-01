@@ -836,6 +836,20 @@ wheels = [
 ]
 
 [[package]]
+name = "opentelemetry-instrumentation-asyncpg"
+version = "0.65b0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "opentelemetry-semantic-conventions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/03/de/21b57f84a41385d7055547c03b491b0de0531b0fa5a03cd4a6499a57a8f8/opentelemetry_instrumentation_asyncpg-0.65b0.tar.gz", hash = "sha256:0b14338886f17c18a9899d6764117a4c163a9826f6ed1577f68ee773f95ebbc2", size = 11202, upload-time = "2026-07-16T15:25:57.335Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/18/c021ac484e447fd185a968cf3b134b67c30bfbda6f0add347da1d7c109e2/opentelemetry_instrumentation_asyncpg-0.65b0-py3-none-any.whl", hash = "sha256:9156d2501021b968da0f317eb508d3efb3e7506bf50e00ee477ce0636a12772a", size = 9744, upload-time = "2026-07-16T15:25:00.172Z" },
+]
+
+[[package]]
 name = "opentelemetry-instrumentation-fastapi"
 version = "0.65b0"
 source = { registry = "https://pypi.org/simple" }
@@ -910,6 +924,7 @@ dependencies = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-distro" },
     { name = "opentelemetry-exporter-otlp" },
+    { name = "opentelemetry-instrumentation-asyncpg" },
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-sdk" },
     { name = "phonenumbers" },
@@ -940,6 +955,7 @@ requires-dist = [
     { name = "opentelemetry-api", specifier = ">=1.44.0" },
     { name = "opentelemetry-distro", specifier = ">=0.65b0" },
     { name = "opentelemetry-exporter-otlp", specifier = ">=1.44.0" },
+    { name = "opentelemetry-instrumentation-asyncpg", specifier = ">=0.65b0" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.65b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.44.0" },
     { name = "phonenumbers", specifier = ">=9.0.37" },
