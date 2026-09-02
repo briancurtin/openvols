@@ -7,14 +7,27 @@ on:
 
 jobs:
   ty:
-    runs-on: ubuntu-latest
+    name: ty
+    runs-on: ubuntu-slim
+    strategy:
+      matrix:
+        python-version: ["3.14"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
 
+      - name: Install tox
+        run: uv tool install tox --with tox-uv
+
       - name: Run ty
-        run: uv run --python 3.14 ty check
+        run: tox -f ty

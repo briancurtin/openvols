@@ -11,21 +11,33 @@ permissions:
 
 jobs:
   pytest:
+    name: pytest
     runs-on: ubuntu-latest
     env:
       OTEL_SDK_DISABLED: true
+      GITHUB_WORKFLOW: true
+    strategy:
+      matrix:
+        python-version: ["3.14"]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
 
+      - name: Install tox
+        run: uv tool install tox --with tox-uv
+
       - name: Run tests
-        run: uv run --python 3.14 pytest --cov --cov-report=term --cov-report=json:coverage-head.json
+        run: tox -f unit -f data -- --cov --cov-report=term --cov-report=json:coverage-head.json
 
       - name: Run tests against base branch
         if: github.event_name == 'pull_request'
@@ -34,7 +46,7 @@ jobs:
           git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=1
           git worktree add /tmp/coverage-base "origin/${{ github.event.pull_request.base.ref }}"
           cd /tmp/coverage-base
-          uv run --python 3.14 pytest --cov --cov-report=json:"${GITHUB_WORKSPACE}/coverage-base.json"
+          tox -f unit -f data -- --cov --cov-report=json:"${GITHUB_WORKSPACE}/coverage-base.json"
 
       - name: Compare coverage
         if: always()
