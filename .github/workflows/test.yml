@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OTEL_SDK_DISABLED: true
+      GITHUB_WORKFLOW: true
     steps:
       - uses: actions/checkout@v4
         with:
