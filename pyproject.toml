@@ -72,3 +72,29 @@ asyncio_mode = "auto"
 env = [
     "OTEL_SDK_DISABLED = true"
 ]
+
+[tool.tox]
+env_list = ["3.14", "ruff", "ty"]
+requires = ["tox-uv"]
+
+[tool.tox.env_run_base]
+runner = "uv-venv-lock-runner"
+description = "Run the test suite with pytest"
+deps = [
+    "pytest>=8",
+]
+commands = [["pytest", { replace = "posargs", default = ["tests"], extend = true }]]
+
+[tool.tox.env.ruff]
+description = "Run the ruff linter"
+runner = "uv-venv-lock-runner"
+skip_install = true
+deps = ["ruff"]
+commands = [["ruff", "check", { replace = "posargs", default = ["."], extend = true }]]
+
+[tool.tox.env.ty]
+description = "Run the ty type checker"
+runner = "uv-venv-lock-runner"
+skip_install = true
+deps = ["ty"]
+commands = [["ty", "check", { replace = "posargs", default = ["."], extend = true }]]
