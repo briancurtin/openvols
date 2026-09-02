@@ -7,6 +7,7 @@ on:
 
 jobs:
   ty:
+    name: ty
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v7

@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   pytest:
+    name: pytest
     runs-on: ubuntu-latest
     env:
       OTEL_SDK_DISABLED: true

@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   dependabot:
+    name: dependabot
     runs-on: ubuntu-slim
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'briancurtin/openvols'
     steps:
