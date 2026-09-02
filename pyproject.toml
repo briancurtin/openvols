@@ -77,8 +77,9 @@ env = [
 env_list = ["3.14", "data", "ruff", "ty"]
 requires = ["tox-uv"]
 
-[tool.tox.env_run_base]
+[tool.tox.env_base.unit]
 description = "Run pytest unit tests"
+factors = [["3.14"]]
 runner = "uv-venv-lock-runner"
 skip_install = true
 set_env = {OTEL_SDK_DISABLED = "true"}
@@ -93,9 +94,10 @@ commands = [
 description = "Run pytest Postgres tests"
 runner = "uv-venv-lock-runner"
 skip_install = true
-allowlist_externals = ["docker"]
+allowlist_externals = ["docker", "sleep"]
 commands_pre = [
     ["docker", "compose", "up", "-d"],
+    ["sleep", "1"],
     ["yoyo", "apply", "-c", "yoyo-dev.ini", "-b"]
 ]
 commands = [
