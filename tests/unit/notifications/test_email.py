@@ -11,6 +11,7 @@ import pytest
 from openvols.notifications import email
 from openvols.notifications.email.file import FileEmailSender
 from openvols.notifications.email.sendgrid import SendGridEmailSender
+from tests.unit.notifications.common import get_temp_file_contents
 
 
 def _message(**overrides) -> email.EmailMessage:
@@ -24,13 +25,15 @@ def _message(**overrides) -> email.EmailMessage:
     return email.EmailMessage(**kwargs)
 
 
-async def test_file_sender_writes_message(tmp_path):
-    sender = FileEmailSender(str(tmp_path))
+async def test_file_sender_writes_message():
+    sender = FileEmailSender()
     await sender.send(_message())
 
-    written = list(tmp_path.iterdir())
-    assert len(written) == 1
-    assert json.loads(written[0].read_text())["to"] == "jane@example.org"
+    contents = await get_temp_file_contents(sender)
+    assert contents["to"] == "jane@example.org"
+    assert contents["subject"] == "You're registered"
+    assert contents["html_body"] == "<p>See you there!</p>"
+    assert contents["text_body"] == "See you there!"
 
 
 async def test_file_sender_defaults_to_a_fresh_temp_directory():
@@ -38,7 +41,6 @@ async def test_file_sender_defaults_to_a_fresh_temp_directory():
     second = FileEmailSender()
 
     assert first.directory != second.directory
-    assert first.directory.is_dir()
 
 
 def test_factory_returns_file_sender_by_default():

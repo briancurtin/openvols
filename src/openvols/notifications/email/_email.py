@@ -39,7 +39,6 @@ class EmailSettings(pydantic_settings.BaseSettings):
     backend: typing.Literal["file", "sendgrid"] = "file"
     from_email: str = "notifications@openvols.org"
     sendgrid_api_key: str = ""
-    file_directory: str = ""
 
 
 class EmailSender(typing.Protocol):
