@@ -24,7 +24,8 @@ class FileSMSSender:
 
     def __init__(self):
         self.directory = tempfile.TemporaryDirectory(prefix="openvols-sms-")
-        self.temp_file = tempfile.NamedTemporaryFile(dir=self.directory.name, delete=False)
+        # SIM115 wants us to use a context manager, but we keep it open and close on __del__
+        self.temp_file = tempfile.NamedTemporaryFile(dir=self.directory.name, delete=False)  # noqa: SIM115
 
     def __del__(self):
         self.temp_file.close()
