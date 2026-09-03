@@ -12,6 +12,7 @@ import pytest
 from openvols.notifications import sms
 from openvols.notifications.sms.file import FileSMSSender
 from openvols.notifications.sms.twilio import TwilioSMSSender
+from tests.unit.notifications.common import get_temp_file_contents
 
 
 def _message(**overrides) -> sms.SMSMessage:
@@ -20,20 +21,11 @@ def _message(**overrides) -> sms.SMSMessage:
     return sms.SMSMessage(**kwargs)
 
 
-def get_temp_file_contents(path) -> dict:
-    """Return the JSON contents of the temp test file"""
-    with open(path, "r", encoding="utf-8") as f:
-        return json.loads(f.read())
-
-
 async def test_file_sender_writes_message():
     sender = FileSMSSender()
     await sender.send(_message())
 
-    # Don't block the loop on io
-    contents = await asyncio.get_running_loop().run_in_executor(
-        None, get_temp_file_contents, sender.temp_file.name
-    )
+    contents = await get_temp_file_contents(sender)
     assert contents["to"] == "+12025550182"
     assert contents["body"] == "See you tomorrow at 9am!"
 
