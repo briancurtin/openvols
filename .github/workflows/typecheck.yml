@@ -3,7 +3,11 @@ name: Type checking
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
   pull_request:
+    paths-ignore:
+      - "docs/**"
 
 jobs:
   ty:
