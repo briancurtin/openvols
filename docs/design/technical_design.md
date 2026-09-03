@@ -209,6 +209,48 @@ using `YYYY-MM-DD` format, such as `2026-08-17`.
 See [OpenAPI Spec](../openapi.json) for the full specification. This is available
 from a running instance at the `/docs` route.
 
+## Notifications
+
+Notifications for OpenVols are primarily handled through email, with optional
+reminders sent via SMS for participants of upcoming opportunities.
+
+### Email
+
+#### Magic link flow with a JWT
+This API should serve a dual purpose of causing email to be sent from one
+of two different email templates based on context. From an explicit sign-in
+context, the email should be about signing in. From an email validation context,
+such as a user registering for the first time for an opportunity, the email
+should be about validating their email address. In both cases, the API returns
+an auth cookie to log the user in.
+
+#### Opportunity registration confirmation, including waitlisted users
+
+Users should receive an email after signing up for an opportunity, with conditional
+wording depending on whether or not they are approved. The email should include
+the details of the opporunity, along with a calendar invite in ICS format
+as an attachment of type `text/calendar` for email clients to render.
+
+#### Opportunity waitlist promotion
+
+When a user gets switched from `approved=false` to `approved=true` through
+any of the update, cancel, approve APIs, they should get an email notifying
+that they are now off the waitlist and fully registered.
+
+#### Opportunity reminder
+
+A reminder of an upcoming opportunity should be sent to all approved registrants.
+This will be scheduled by the notification service to be sent 48 hours in advance.
+
+#### Opportunity cancellation
+
+### SMS
+
+#### Opportunity reminder
+A reminder of an upcoming opportunity should be sent to all approved registrants
+that have provided a phone number and opted in to receiving SMS notifications.
+This will be scheduled by the notification service to be sent 48 hours in advance.
+
 ## Observability
 
 OpenTelemetry, or OTel, will be used to observe the systems within OpenVols.
