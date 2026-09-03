@@ -14,13 +14,7 @@ from openvols.notifications.sms._sms import SMSMessage
 
 
 class FileSMSSender:
-    """
-    Writes each SMSMessage as a JSON file under `directory`.
-
-    `directory` defaults to a fresh temporary directory when not given,
-    since tests and local development don't need the files to persist
-    across runs.
-    """
+    """Writes each SMSMessage as a JSON file in a temporary directory"""
 
     def __init__(self):
         self.directory = tempfile.TemporaryDirectory(prefix="openvols-sms-")
