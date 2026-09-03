@@ -4,9 +4,6 @@ Twilio isn't exercised beyond construction -- doing so would require a live
 account -- but the factory's validation of its settings is.
 """
 
-import asyncio
-import json
-
 import pytest
 
 from openvols.notifications import sms
