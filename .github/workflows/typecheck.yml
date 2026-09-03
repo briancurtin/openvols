@@ -3,15 +3,16 @@ name: Type checking
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
   pull_request:
+    paths-ignore:
+      - "docs/**"
 
 jobs:
   ty:
     name: ty
     runs-on: ubuntu-slim
-    strategy:
-      matrix:
-        python-version: ["3.14"]
     steps:
       - uses: actions/checkout@v7
         with:
