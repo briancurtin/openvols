@@ -74,7 +74,12 @@ env = [
 ]
 
 [tool.tox]
-env_list = ["unit", "data", "ruff", "ty"]
+env_list = [
+    { product = [["unit"],["3.14"]] },
+    { product = [["data"],["3.14"]] },
+    { product = [["ruff"],["3.14"]] },
+    { product = [["ty"],["3.14"]] },
+]
 requires = ["tox-uv"]
 
 [tool.tox.env_base.unit]
@@ -90,8 +95,9 @@ commands = [
     ["pytest", { replace = "posargs", default = ["tests/unit"], extend = true }]
 ]
 
-[tool.tox.env.data]
+[tool.tox.env_base.data]
 description = "Run pytest Postgres tests"
+factors = [["3.14"]]
 runner = "uv-venv-lock-runner"
 skip_install = true
 allowlist_externals = ["docker", "./scripts/docker-ready"]
@@ -108,15 +114,17 @@ commands_post = [
     ["docker", "compose", "down"]
 ]
 
-[tool.tox.env.ruff]
+[tool.tox.env_base.ruff]
 description = "Run the ruff linter"
+factors = [["3.14"]]
 runner = "uv-venv-lock-runner"
 skip_install = true
 deps = ["ruff"]
 commands = [["ruff", "check", { replace = "posargs", default = ["."], extend = true }]]
 
-[tool.tox.env.ty]
+[tool.tox.env_base.ty]
 description = "Run the ty type checker"
+factors = [["3.14"]]
 runner = "uv-venv-lock-runner"
 skip_install = true
 deps = ["ty"]
