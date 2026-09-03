@@ -74,7 +74,7 @@ env = [
 ]
 
 [tool.tox]
-env_list = ["3.14", "data", "ruff", "ty"]
+env_list = ["unit", "data", "ruff", "ty"]
 requires = ["tox-uv"]
 
 [tool.tox.env_base.unit]
