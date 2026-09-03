@@ -5,7 +5,7 @@ from openvols.notifications.sms import _sms, file, twilio
 
 def create_sms_sender(settings: _sms.SMSSettings) -> _sms.SMSSender:
     if settings.backend == "file":
-        return file.FileSMSSender(settings.file_directory)
+        return file.FileSMSSender()
 
     if settings.backend == "twilio":
         if not settings.twilio_account_sid or not settings.twilio_auth_token:

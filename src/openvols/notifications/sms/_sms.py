@@ -39,7 +39,6 @@ class SMSSettings(pydantic_settings.BaseSettings):
     from_number: str = ""
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
-    file_directory: str = ""
 
 
 class SMSSender(typing.Protocol):

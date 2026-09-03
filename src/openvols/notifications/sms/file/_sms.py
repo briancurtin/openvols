@@ -9,8 +9,6 @@ for a human or a test to inspect.
 
 import json
 import tempfile
-import uuid
-from pathlib import Path
 
 from openvols.notifications.sms._sms import SMSMessage
 
@@ -24,12 +22,14 @@ class FileSMSSender:
     across runs.
     """
 
-    def __init__(self, directory: str = ""):
-        self.directory = (
-            Path(directory) if directory else Path(tempfile.mkdtemp(prefix="openvols-sms-"))
-        )
-        self.directory.mkdir(parents=True, exist_ok=True)
+    def __init__(self):
+        self.directory = tempfile.TemporaryDirectory(prefix="openvols-sms-")
+        self.temp_file = tempfile.NamedTemporaryFile(dir=self.directory.name, delete=False)
+
+    def __del__(self):
+        self.temp_file.close()
+        self.directory.cleanup()
 
     async def send(self, message: SMSMessage) -> None:
-        path = self.directory / f"{uuid.uuid4()}.json"
-        path.write_text(json.dumps(message.model_dump(), indent=2))
+        self.temp_file.write(json.dumps(message.model_dump(), indent=2).encode("utf-8"))
+        self.temp_file.flush()

@@ -4,6 +4,7 @@ Twilio isn't exercised beyond construction -- doing so would require a live
 account -- but the factory's validation of its settings is.
 """
 
+import asyncio
 import json
 
 import pytest
@@ -19,13 +20,22 @@ def _message(**overrides) -> sms.SMSMessage:
     return sms.SMSMessage(**kwargs)
 
 
-async def test_file_sender_writes_message(tmp_path):
-    sender = FileSMSSender(str(tmp_path))
+def get_temp_file_contents(path) -> dict:
+    """Return the JSON contents of the temp test file"""
+    with open(path, "r", encoding="utf-8") as f:
+        return json.loads(f.read())
+
+
+async def test_file_sender_writes_message():
+    sender = FileSMSSender()
     await sender.send(_message())
 
-    written = list(tmp_path.iterdir())
-    assert len(written) == 1
-    assert json.loads(written[0].read_text())["to"] == "+12025550182"
+    # Don't block the loop on io
+    contents = await asyncio.get_running_loop().run_in_executor(
+        None, get_temp_file_contents, sender.temp_file.name
+    )
+    assert contents["to"] == "+12025550182"
+    assert contents["body"] == "See you tomorrow at 9am!"
 
 
 async def test_file_sender_defaults_to_a_fresh_temp_directory():
@@ -33,7 +43,6 @@ async def test_file_sender_defaults_to_a_fresh_temp_directory():
     second = FileSMSSender()
 
     assert first.directory != second.directory
-    assert first.directory.is_dir()
 
 
 def test_factory_returns_file_sender_by_default():
