@@ -74,12 +74,17 @@ env = [
 ]
 
 [tool.tox]
-env_list = ["unit", "data", "ruff", "ty"]
+env_list = [
+    { product = [["unit"],["3.14"]] },
+    { product = [["data"],["3.14"]] },
+    { product = [["ruff"],["3.14"]] },
+    { product = [["ty"],["3.14"]] },
+]
 requires = ["tox-uv"]
 
 [tool.tox.env_base.unit]
 description = "Run pytest unit tests"
-factors = [["3.14"]]
+factors = [["3.14", "3.15"]]
 runner = "uv-venv-lock-runner"
 skip_install = true
 set_env = {OTEL_SDK_DISABLED = "true"}
@@ -90,8 +95,9 @@ commands = [
     ["pytest", { replace = "posargs", default = ["tests/unit"], extend = true }]
 ]
 
-[tool.tox.env.data]
+[tool.tox.env_base.data]
 description = "Run pytest Postgres tests"
+factors = [["3.14", "3.15"]]
 runner = "uv-venv-lock-runner"
 skip_install = true
 allowlist_externals = ["docker", "./scripts/docker-ready"]
@@ -110,6 +116,7 @@ commands_post = [
 
 [tool.tox.env.ruff]
 description = "Run the ruff linter"
+factors = [["3.14", "3.15"]]
 runner = "uv-venv-lock-runner"
 skip_install = true
 deps = ["ruff"]
@@ -117,6 +124,7 @@ commands = [["ruff", "check", { replace = "posargs", default = ["."], extend = t
 
 [tool.tox.env.ty]
 description = "Run the ty type checker"
+factors = [["3.14", "3.15"]]
 runner = "uv-venv-lock-runner"
 skip_install = true
 deps = ["ty"]
