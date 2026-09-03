@@ -1,5 +1,5 @@
 """
-File-based SmsSender.
+File-based SMSSender.
 
 Backs local development and tests where a real SMS provider isn't
 warranted -- see technical_design.md's "Fallback implementation" note.
@@ -12,12 +12,12 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from openvols.notifications.sms._sms import SmsMessage
+from openvols.notifications.sms._sms import SMSMessage
 
 
-class FileSmsSender:
+class FileSMSSender:
     """
-    Writes each SmsMessage as a JSON file under `directory`.
+    Writes each SMSMessage as a JSON file under `directory`.
 
     `directory` defaults to a fresh temporary directory when not given,
     since tests and local development don't need the files to persist
@@ -30,6 +30,6 @@ class FileSmsSender:
         )
         self.directory.mkdir(parents=True, exist_ok=True)
 
-    async def send(self, message: SmsMessage) -> None:
+    async def send(self, message: SMSMessage) -> None:
         path = self.directory / f"{uuid.uuid4()}.json"
         path.write_text(json.dumps(message.model_dump(), indent=2))

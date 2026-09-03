@@ -9,18 +9,18 @@ import json
 import pytest
 
 from openvols.notifications import sms
-from openvols.notifications.sms.file import FileSmsSender
-from openvols.notifications.sms.twilio import TwilioSmsSender
+from openvols.notifications.sms.file import FileSMSSender
+from openvols.notifications.sms.twilio import TwilioSMSSender
 
 
-def _message(**overrides) -> sms.SmsMessage:
+def _message(**overrides) -> sms.SMSMessage:
     kwargs = {"to": "+12025550182", "body": "See you tomorrow at 9am!"}
     kwargs.update(overrides)
-    return sms.SmsMessage(**kwargs)
+    return sms.SMSMessage(**kwargs)
 
 
 async def test_file_sender_writes_message(tmp_path):
-    sender = FileSmsSender(str(tmp_path))
+    sender = FileSMSSender(str(tmp_path))
     await sender.send(_message())
 
     written = list(tmp_path.iterdir())
@@ -29,39 +29,39 @@ async def test_file_sender_writes_message(tmp_path):
 
 
 async def test_file_sender_defaults_to_a_fresh_temp_directory():
-    first = FileSmsSender()
-    second = FileSmsSender()
+    first = FileSMSSender()
+    second = FileSMSSender()
 
     assert first.directory != second.directory
     assert first.directory.is_dir()
 
 
 def test_factory_returns_file_sender_by_default():
-    sender = sms.create_sms_sender(sms.SmsSettings())
-    assert isinstance(sender, FileSmsSender)
+    sender = sms.create_sms_sender(sms.SMSSettings())
+    assert isinstance(sender, FileSMSSender)
 
 
 def test_factory_returns_twilio_sender_when_configured():
     sender = sms.create_sms_sender(
-        sms.SmsSettings(
+        sms.SMSSettings(
             backend="twilio",
             twilio_account_sid="AC" + "0" * 32,
             twilio_auth_token="fake-token",
             from_number="+15555550100",
         )
     )
-    assert isinstance(sender, TwilioSmsSender)
+    assert isinstance(sender, TwilioSMSSender)
 
 
 def test_factory_requires_twilio_credentials():
     with pytest.raises(ValueError, match="TWILIO_ACCOUNT_SID"):
-        sms.create_sms_sender(sms.SmsSettings(backend="twilio", from_number="+15555550100"))
+        sms.create_sms_sender(sms.SMSSettings(backend="twilio", from_number="+15555550100"))
 
 
 def test_factory_requires_twilio_from_number():
     with pytest.raises(ValueError, match="FROM_NUMBER"):
         sms.create_sms_sender(
-            sms.SmsSettings(
+            sms.SMSSettings(
                 backend="twilio", twilio_account_sid="AC" + "0" * 32, twilio_auth_token="fake-token"
             )
         )

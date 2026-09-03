@@ -6,10 +6,10 @@ signals, and the settings that select one.
 
 Callers -- openvols.api and openvols.notifications above all -- depend only
 on openvols.notifications.sms (this module's contents, re-exported via
-sms/__init__.py), never on a specific backend package. SmsSender is a
+sms/__init__.py), never on a specific backend package. SMSSender is a
 structural typing.Protocol, so a backend such as
-openvols.notifications.sms.twilio.TwilioSmsSender or
-openvols.notifications.sms.file.FileSmsSender satisfies it without
+openvols.notifications.sms.twilio.TwilioSMSSender or
+openvols.notifications.sms.file.FileSMSSender satisfies it without
 inheriting from anything defined here.
 """
 
@@ -19,19 +19,19 @@ import pydantic
 import pydantic_settings
 
 
-class SmsError(Exception):
-    """Base for every error an SmsSender raises, regardless of backend."""
+class SMSError(Exception):
+    """Base for every error an SMSSender raises, regardless of backend."""
 
 
-class SmsMessage(pydantic.BaseModel):
+class SMSMessage(pydantic.BaseModel):
     """A single SMS to send, populated by the caller from a template."""
 
     to: str = pydantic.Field(min_length=1)
     body: str = pydantic.Field(min_length=1, max_length=1600)
 
 
-class SmsSettings(pydantic_settings.BaseSettings):
-    """Selects and configures the SmsSender backend, read from the environment."""
+class SMSSettings(pydantic_settings.BaseSettings):
+    """Selects and configures the SMSSender backend, read from the environment."""
 
     model_config = pydantic_settings.SettingsConfigDict(env_prefix="OPENVOLS_NOTIFICATIONS_SMS_")
 
@@ -42,7 +42,7 @@ class SmsSettings(pydantic_settings.BaseSettings):
     file_directory: str = ""
 
 
-class SmsSender(typing.Protocol):
+class SMSSender(typing.Protocol):
     """The single abstraction callers depend on for sending SMS."""
 
-    async def send(self, message: SmsMessage) -> None: ...
+    async def send(self, message: SMSMessage) -> None: ...

@@ -1,5 +1,5 @@
-"""Public interface for the Twilio SmsSender backend."""
+"""Public interface for the Twilio SMSSender backend."""
 
-from openvols.notifications.sms.twilio._sms import TwilioSmsSender
+from openvols.notifications.sms.twilio._sms import TwilioSMSSender
 
-__all__ = ["TwilioSmsSender"]
+__all__ = ["TwilioSMSSender"]

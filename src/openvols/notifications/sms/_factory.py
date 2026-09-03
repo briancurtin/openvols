@@ -1,11 +1,11 @@
-"""Builds an SmsSender for the backend selected by SmsSettings."""
+"""Builds an SMSSender for the backend selected by SMSSettings."""
 
 from openvols.notifications.sms import _sms, file, twilio
 
 
-def create_sms_sender(settings: _sms.SmsSettings) -> _sms.SmsSender:
+def create_sms_sender(settings: _sms.SMSSettings) -> _sms.SMSSender:
     if settings.backend == "file":
-        return file.FileSmsSender(settings.file_directory)
+        return file.FileSMSSender(settings.file_directory)
 
     if settings.backend == "twilio":
         if not settings.twilio_account_sid or not settings.twilio_auth_token:
@@ -19,7 +19,7 @@ def create_sms_sender(settings: _sms.SmsSettings) -> _sms.SmsSender:
                 "OPENVOLS_NOTIFICATIONS_SMS_FROM_NUMBER is required for the twilio backend"
             )
 
-        return twilio.TwilioSmsSender(
+        return twilio.TwilioSMSSender(
             settings.twilio_account_sid, settings.twilio_auth_token, settings.from_number
         )
 
