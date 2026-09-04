@@ -1,8 +1,6 @@
 """
 Email protocol
 
-Callers depend only on openvols.notifications.email not on a specific
-backend package.
 EmailSender uses structural typing.Protocol, so a backend such as
 openvols.notifications.email.sendgrid.SendGridEmailSender or
 openvols.notifications.email.file.FileEmailSender satisfies it without
