@@ -2,6 +2,8 @@
 
 from openvols.notifications.email import _email, file, sendgrid
 
+__all__ = ["create_email_sender"]
+
 
 def create_email_sender(settings: _email.EmailSettings) -> _email.EmailSender:
     if settings.backend == "file":

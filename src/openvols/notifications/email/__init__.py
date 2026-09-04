@@ -7,18 +7,5 @@ openvols.notifications.email._email. That is what keeps callers decoupled
 from which backend is actually configured.
 """
 
-from openvols.notifications.email._email import (
-    EmailError,
-    EmailMessage,
-    EmailSender,
-    EmailSettings,
-)
-from openvols.notifications.email._factory import create_email_sender
-
-__all__ = [
-    "EmailError",
-    "EmailMessage",
-    "EmailSender",
-    "EmailSettings",
-    "create_email_sender",
-]
+from openvols.notifications.email._email import *
+from openvols.notifications.email._factory import *
