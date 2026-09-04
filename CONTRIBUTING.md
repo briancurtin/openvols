@@ -36,3 +36,34 @@ that the _how_ is identifiable, but if not, that's a sign it may be too complex.
   a duplicate. Use this sparingly only how its intended. A few cases that are ok to do:
     - `from datetime import datetime`
     - `from dataclasses import dataclass`
+- Name exporting should be defined at the module level, not from a parent package's `__init__`. This way
+  it's more explicit that a module owns its exports, and cohesion improves over defining this
+  list at a higher level.
+
+  Instead of this:
+  ```python
+  # package/__init__.py
+  from module import (
+      name1,
+      name2,
+      name3,
+  )
+  __all__ = [
+      "name1",
+      "name2",
+      "name3",
+  ]
+  ```
+  Do this:
+  ```python
+  # package/module.py
+  __all__ = ("name1", "name2", "name3")
+  # package/__init__.py
+  from module import *
+  ```
+  > [!NOTE]
+  > [`F403`](https://docs.astral.sh/ruff/rules/undefined-local-with-import-star/),
+  > the error about wildcard imports being used, is ignored for the entire project
+  > in `pyproject.toml`
+
+  See https://github.com/briancurtin/openvols/issues/54 for more details.
