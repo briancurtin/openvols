@@ -2,6 +2,8 @@
 
 from openvols.data import _store, memory, postgres
 
+__all__ = ["create_store"]
+
 
 def create_store(settings: _store.DataSettings) -> _store.Store:
     if settings.backend == "memory":

@@ -7,13 +7,5 @@ openvols.notifications.sms._sms. That is what keeps callers decoupled from
 which backend is actually configured.
 """
 
-from openvols.notifications.sms._factory import create_sms_sender
-from openvols.notifications.sms._sms import SMSError, SMSMessage, SMSSender, SMSSettings
-
-__all__ = [
-    "SMSError",
-    "SMSMessage",
-    "SMSSender",
-    "SMSSettings",
-    "create_sms_sender",
-]
+from openvols.notifications.sms._factory import *
+from openvols.notifications.sms._sms import *

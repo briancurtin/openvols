@@ -12,6 +12,13 @@ import typing
 import pydantic
 import pydantic_settings
 
+__all__ = (
+    "SMSError",
+    "SMSMessage",
+    "SMSSender",
+    "SMSSettings",
+)
+
 
 class SMSError(Exception):
     """Base for every error an SMSSender raises, regardless of backend"""

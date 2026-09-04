@@ -12,6 +12,13 @@ import typing
 import pydantic
 import pydantic_settings
 
+__all__ = (
+    "EmailError",
+    "EmailMessage",
+    "EmailSender",
+    "EmailSettings",
+)
+
 
 class EmailError(Exception):
     """Base for EmailSender exceptions, regardless of backend"""

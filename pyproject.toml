@@ -57,6 +57,9 @@ indent-style = "space"
 docstring-code-format = false
 
 [tool.ruff.lint]
+ignore = [
+    "F403",  # Star imports, which we use intentionally for exporting
+]
 extend-select = [
     "E",  # pycodestyle
     "F",  # pyflakes
