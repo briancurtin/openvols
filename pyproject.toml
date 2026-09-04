@@ -25,7 +25,9 @@ dependencies = [
     "pytest>=9.1.1",
     "pytest-cov>=7.0.0",
     "ruff>=0.16.1",
+    "sendgrid>=6.12.5",
     "structlog>=26.1.0",
+    "twilio>=9.11.0",
     "yoyo-migrations>=9.0.0",
 ]
 
