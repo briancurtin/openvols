@@ -1,4 +1,4 @@
-"""Twilio-backed SMSSender."""
+"""Twilio-backed SMSSender"""
 
 import asyncio
 
@@ -9,10 +9,10 @@ from openvols.notifications.sms._sms import SMSMessage
 
 class TwilioSMSSender:
     """
-    Sends SMS through the Twilio REST API.
+    Sends SMS through the Twilio REST API
 
     Twilio's client is synchronous, so send() runs it in a thread to avoid
-    blocking the event loop.
+    blocking the event loop
     """
 
     def __init__(self, account_sid: str, auth_token: str, from_number: str):

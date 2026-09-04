@@ -1,10 +1,7 @@
 """
-File-based SMSSender.
+File-based Sender for Email and SMS subclasses
 
-Backs local development and tests where a real SMS provider isn't
-warranted -- see technical_design.md's "Fallback implementation" note.
-Nothing here is delivered anywhere; each message is written as a JSON file
-for a human or a test to inspect.
+Used for local development and tests without a real provider
 """
 
 import abc

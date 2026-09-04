@@ -1,4 +1,4 @@
-"""SendGrid-backed EmailSender."""
+"""SendGrid-backed EmailSender"""
 
 import asyncio
 
@@ -10,10 +10,10 @@ from openvols.notifications.email._email import EmailError, EmailMessage
 
 class SendGridEmailSender:
     """
-    Sends email through the SendGrid HTTP API.
+    Sends email through the SendGrid HTTP API
 
     SendGrid's client is synchronous, so send() runs it in a thread to avoid
-    blocking the event loop.
+    blocking the event loop
     """
 
     def __init__(self, api_key: str, from_email: str):

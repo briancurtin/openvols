@@ -1,9 +1,8 @@
-"""Builds an SMSSender for the backend selected by SMSSettings."""
-
 from openvols.notifications.sms import _sms, file, twilio
 
 
 def create_sms_sender(settings: _sms.SMSSettings) -> _sms.SMSSender:
+    """Returns an SMSSender for the backend configured by SMSSettings"""
     if settings.backend == "file":
         return file.FileSMSSender()
 
