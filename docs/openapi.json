@@ -79,34 +79,36 @@
       }
     },
     "/api/organizations": {
-      "get": {
-        "summary": "List Organizations",
-        "operationId": "list_organizations_api_organizations_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListStoredOrganizations"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "summary": "Create Organization",
         "operationId": "create_organization_api_organizations_post",
+        "parameters": [
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Organization"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -125,6 +127,22 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Organizations",
+        "operationId": "list_organizations_api_organizations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredOrganizations"
                 }
               }
             }
@@ -182,6 +200,22 @@
               "type": "integer",
               "title": "Organization Id"
             }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
           }
         ],
         "requestBody": {
@@ -219,34 +253,18 @@
       }
     },
     "/api/users": {
-      "get": {
-        "summary": "List Users",
-        "operationId": "list_users_api_users_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListStoredUsers"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "summary": "Create User",
         "operationId": "create_user_api_users_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/User"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -255,6 +273,50 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StoredUser"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Users",
+        "operationId": "list_users_api_users_get",
+        "parameters": [
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredUsers"
                 }
               }
             }
@@ -284,6 +346,22 @@
             "schema": {
               "type": "integer",
               "title": "User Id"
+            }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
             }
           }
         ],
@@ -321,6 +399,22 @@
             "schema": {
               "type": "integer",
               "title": "User Id"
+            }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
             }
           }
         ],
@@ -369,6 +463,22 @@
               "type": "integer",
               "title": "User Id"
             }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
           }
         ],
         "responses": {
@@ -394,34 +504,36 @@
       }
     },
     "/api/roles": {
-      "get": {
-        "summary": "List Roles",
-        "operationId": "list_roles_api_roles_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListStoredRoles"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "summary": "Create Role",
         "operationId": "create_role_api_roles_post",
+        "parameters": [
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Role"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -430,6 +542,50 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StoredRole"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Roles",
+        "operationId": "list_roles_api_roles_get",
+        "parameters": [
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredRoles"
                 }
               }
             }
@@ -459,6 +615,22 @@
             "schema": {
               "type": "integer",
               "title": "Role Id"
+            }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
             }
           }
         ],
@@ -497,6 +669,22 @@
               "type": "integer",
               "title": "Role Id"
             }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
           }
         ],
         "requestBody": {
@@ -534,34 +722,36 @@
       }
     },
     "/api/locations": {
-      "get": {
-        "summary": "List Locations",
-        "operationId": "list_locations_api_locations_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListStoredLocations"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "summary": "Create Location",
         "operationId": "create_location_api_locations_post",
+        "parameters": [
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Location"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -580,6 +770,22 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Locations",
+        "operationId": "list_locations_api_locations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredLocations"
                 }
               }
             }
@@ -637,6 +843,22 @@
               "type": "integer",
               "title": "Location Id"
             }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
           }
         ],
         "requestBody": {
@@ -674,34 +896,36 @@
       }
     },
     "/api/agreements": {
-      "get": {
-        "summary": "List Agreements",
-        "operationId": "list_agreements_api_agreements_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListStoredAgreements"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "summary": "Create Agreement",
         "operationId": "create_agreement_api_agreements_post",
+        "parameters": [
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Agreement"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -710,6 +934,50 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StoredAgreement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Agreements",
+        "operationId": "list_agreements_api_agreements_get",
+        "parameters": [
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredAgreements"
                 }
               }
             }
@@ -739,6 +1007,22 @@
             "schema": {
               "type": "integer",
               "title": "Agreement Id"
+            }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
             }
           }
         ],
@@ -777,6 +1061,22 @@
               "type": "integer",
               "title": "Agreement Id"
             }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
           }
         ],
         "requestBody": {
@@ -814,34 +1114,36 @@
       }
     },
     "/api/opportunities": {
-      "get": {
-        "summary": "List Opportunities",
-        "operationId": "list_opportunities_api_opportunities_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListStoredOpportunities"
-                }
-              }
-            }
-          }
-        }
-      },
       "post": {
         "summary": "Create Opportunity",
         "operationId": "create_opportunity_api_opportunities_post",
+        "parameters": [
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Opportunity"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -860,6 +1162,22 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List Opportunities",
+        "operationId": "list_opportunities_api_opportunities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStoredOpportunities"
                 }
               }
             }
@@ -916,6 +1234,22 @@
             "schema": {
               "type": "integer",
               "title": "Opportunity Id"
+            }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
             }
           }
         ],
@@ -1020,6 +1354,22 @@
               "type": "integer",
               "title": "Participant Id"
             }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
+            }
           }
         ],
         "responses": {
@@ -1056,6 +1406,22 @@
             "schema": {
               "type": "integer",
               "title": "Participant Id"
+            }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
             }
           }
         ],
@@ -1105,6 +1471,22 @@
             "schema": {
               "type": "integer",
               "title": "Participant Id"
+            }
+          },
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ov Session"
             }
           }
         ],
