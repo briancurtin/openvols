@@ -28,6 +28,7 @@ _TABLES = (
     "opportunities",
     "opportunity_agreements",
     "participants",
+    "sessions",
 )
 
 
