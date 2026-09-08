@@ -37,6 +37,20 @@ async def validate_token(
     return 200
 
 
+@app.post("/api/auth/logout", status_code=204)
+async def logout(
+    response: fastapi.Response,
+    store: dependencies.StoreDependency,
+    token: typing.Annotated[str, fastapi.Cookie(alias=auth.COOKIE_NAME)] = "",
+):
+    """
+    Any caller can call this endpoint to clear their cookie irresspective of token validity
+    """
+    await store.sessions.delete(token)
+
+    auth.clear_session_cookie(response)
+
+
 # ---- Organizations ----
 
 

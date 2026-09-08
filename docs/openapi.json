@@ -78,6 +78,40 @@
         }
       }
     },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Logout",
+        "description": "Any caller can call this endpoint to clear their cookie irresspective of token validity",
+        "operationId": "logout_api_auth_logout_post",
+        "parameters": [
+          {
+            "name": "ov_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Ov Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/organizations": {
       "post": {
         "summary": "Create Organization",

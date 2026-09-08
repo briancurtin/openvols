@@ -3,7 +3,7 @@ Coverage for cookie mechanics in openvols.api.auth.
 
 require_session itself is exercised end to end via the protected routes in
 tests/unit/test_routes.py; this module covers the cookie flags /api/auth/validate
-sets.
+and /api/auth/logout set.
 """
 
 import http.cookies
@@ -11,6 +11,7 @@ import http.cookies
 import fastapi.testclient
 import pytest
 
+from openvols import data
 from openvols.api import auth, routers
 
 
@@ -82,3 +83,70 @@ def test_validate_respects_insecure_cookie_setting(monkeypatch, client, user_id)
     assert cookie["httponly"]
     assert cookie["samesite"] == "lax"
     assert cookie["path"] == "/"
+
+
+# ---- Logout -------------------------------------------------------------------
+
+
+def test_logout_clears_cookie_with_matching_attributes(client, user_id):
+    client.get("/api/auth/validate", params={"token": "jane@example.org"})
+
+    response = client.post("/api/auth/logout")
+
+    assert response.status_code == 204
+    cleared = _cookie(response)
+    assert int(cleared["max-age"]) <= 0
+    assert cleared["httponly"]
+    assert cleared["samesite"] == "lax"
+    assert cleared["secure"]
+    assert cleared["path"] == "/"
+
+
+async def test_logout_deletes_the_session_row(client, user_id):
+    validate = client.get("/api/auth/validate", params={"token": "jane@example.org"})
+    token = validate.cookies[auth.COOKIE_NAME]
+
+    client.post("/api/auth/logout")
+
+    store = routers.app.state.store
+    with pytest.raises(data.InvalidSessionError):
+        await store.sessions.get(token)
+
+
+async def test_logout_with_invalid_token(client, user_id):
+    validate = client.get("/api/auth/validate", params={"token": "jane@example.org"})
+    validate.cookies[auth.COOKIE_NAME] = "invalid-token"
+
+    client.post("/api/auth/logout")
+
+
+async def test_logout_without_token(client, user_id):
+    validate = client.get("/api/auth/validate", params={"token": "jane@example.org"})
+    validate.cookies[auth.COOKIE_NAME] = None
+
+    client.post("/api/auth/logout")
+
+
+def test_logout_invalidates_session_for_protected_routes(client, user_id):
+    client.get("/api/auth/validate", params={"token": "jane@example.org"})
+    client.post("/api/auth/logout")
+
+    response = client.get("/api/users")
+
+    assert response.status_code == 401
+
+
+def test_logout_with_no_cookie_is_204(client):
+    response = client.post("/api/auth/logout")
+
+    assert response.status_code == 204
+
+
+def test_logout_twice_is_204_both_times(client, user_id):
+    client.get("/api/auth/validate", params={"token": "jane@example.org"})
+
+    first = client.post("/api/auth/logout")
+    second = client.post("/api/auth/logout")
+
+    assert first.status_code == 204
+    assert second.status_code == 204
