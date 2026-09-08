@@ -81,6 +81,7 @@
     "/api/auth/logout": {
       "post": {
         "summary": "Logout",
+        "description": "Any caller can call this endpoint to clear their cookie irresspective of token validity",
         "operationId": "logout_api_auth_logout_post",
         "parameters": [
           {
@@ -88,14 +89,8 @@
             "in": "cookie",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
+              "type": "string",
+              "default": "",
               "title": "Ov Session"
             }
           }

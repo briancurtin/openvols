@@ -41,13 +41,12 @@ async def validate_token(
 async def logout(
     response: fastapi.Response,
     store: dependencies.StoreDependency,
-    token: typing.Annotated[str | None, fastapi.Cookie(alias=auth.COOKIE_NAME)] = None,
+    token: typing.Annotated[str, fastapi.Cookie(alias=auth.COOKIE_NAME)] = "",
 ):
-    # Deliberately not behind require_session: an expired or already-deleted
-    # session must still be able to shed its cookie, and answering 401 here
-    # would strand a browser holding a dead token.
-    if token is not None:
-        await store.sessions.delete(token)
+    """
+    Any caller can call this endpoint to clear their cookie irresspective of token validity
+    """
+    await store.sessions.delete(token)
 
     auth.clear_session_cookie(response)
 

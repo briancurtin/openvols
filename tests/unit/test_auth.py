@@ -113,6 +113,20 @@ async def test_logout_deletes_the_session_row(client, user_id):
         await store.sessions.get(token)
 
 
+async def test_logout_with_invalid_token(client, user_id):
+    validate = client.get("/api/auth/validate", params={"token": "jane@example.org"})
+    validate.cookies[auth.COOKIE_NAME] = "invalid-token"
+
+    client.post("/api/auth/logout")
+
+
+async def test_logout_without_token(client, user_id):
+    validate = client.get("/api/auth/validate", params={"token": "jane@example.org"})
+    validate.cookies[auth.COOKIE_NAME] = None
+
+    client.post("/api/auth/logout")
+
+
 def test_logout_invalidates_session_for_protected_routes(client, user_id):
     client.get("/api/auth/validate", params={"token": "jane@example.org"})
     client.post("/api/auth/logout")
