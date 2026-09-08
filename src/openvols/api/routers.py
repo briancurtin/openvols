@@ -4,10 +4,7 @@ import fastapi
 import pydantic
 
 import openvols.models
-from openvols import data
-from openvols.api import app, dependencies
-
-StoreDependency = typing.Annotated[data.Store, fastapi.Depends(dependencies.get_store)]
+from openvols.api import app, auth, dependencies
 
 
 class LoginEmail(pydantic.BaseModel):
@@ -24,7 +21,19 @@ class TokenParams(pydantic.BaseModel):
 
 
 @app.get("/api/auth/validate")
-async def validate_token(params: typing.Annotated[TokenParams, fastapi.Query()]):
+async def validate_token(
+    params: typing.Annotated[TokenParams, fastapi.Query()],
+    response: fastapi.Response,
+    store: dependencies.StoreDependency,
+):
+    # INTERIM: magic-link tokens don't exist yet, so the token is the user's
+    # email address. When https://github.com/briancurtin/openvols/issues/57
+    # lands, this line becomes a token lookup; everything below it stays.
+    user = await store.users.get_by_email(params.token)
+
+    session = await store.sessions.create(user.id)
+    auth.set_session_cookie(response, session)
+
     return 200
 
 
@@ -34,7 +43,7 @@ async def validate_token(params: typing.Annotated[TokenParams, fastapi.Query()])
 @app.post("/api/organizations", response_model=openvols.models.StoredOrganization)
 async def create_organization(
     organization: openvols.models.Organization,
-    store: StoreDependency,
+    store: dependencies.StoreDependency,
 ):
     return await store.organizations.create(organization)
 
@@ -48,7 +57,7 @@ class ListStoredOrganizations(pydantic.BaseModel):
 
 
 @app.get("/api/organizations", response_model=ListStoredOrganizations)
-async def list_organizations(store: StoreDependency):
+async def list_organizations(store: dependencies.StoreDependency):
     return ListStoredOrganizations(organizations=await store.organizations.list())
 
 
@@ -56,7 +65,7 @@ async def list_organizations(store: StoreDependency):
     "/api/organizations/{organization_id}",
     response_model=openvols.models.StoredOrganization,
 )
-async def get_organization(organization_id: int, store: StoreDependency):
+async def get_organization(organization_id: int, store: dependencies.StoreDependency):
     return await store.organizations.get(organization_id)
 
 
@@ -67,7 +76,7 @@ async def get_organization(organization_id: int, store: StoreDependency):
 async def update_organization(
     organization_id: int,
     organization: openvols.models.Organization,
-    store: StoreDependency,
+    store: dependencies.StoreDependency,
 ):
     return await store.organizations.update(organization_id, organization)
 
@@ -76,7 +85,7 @@ async def update_organization(
 
 
 @app.post("/api/users", response_model=openvols.models.StoredUser)
-async def create_user(user: openvols.models.User, store: StoreDependency):
+async def create_user(user: openvols.models.User, store: dependencies.StoreDependency):
     return await store.users.create(user)
 
 
@@ -85,22 +94,24 @@ class ListStoredUsers(pydantic.BaseModel):
 
 
 @app.get("/api/users", response_model=ListStoredUsers)
-async def list_users(store: StoreDependency):
+async def list_users(store: dependencies.StoreDependency):
     return ListStoredUsers(users=await store.users.list())
 
 
 @app.get("/api/users/{user_id}", response_model=openvols.models.StoredUser)
-async def get_user(user_id: int, store: StoreDependency):
+async def get_user(user_id: int, store: dependencies.StoreDependency):
     return await store.users.get(user_id)
 
 
 @app.patch("/api/users/{user_id}", response_model=openvols.models.StoredUser)
-async def update_user(user_id: int, user: openvols.models.User, store: StoreDependency):
+async def update_user(
+    user_id: int, user: openvols.models.User, store: dependencies.StoreDependency
+):
     return await store.users.update(user_id, user)
 
 
 @app.delete("/api/users/{user_id}")
-async def delete_user(user_id: int, store: StoreDependency):
+async def delete_user(user_id: int, store: dependencies.StoreDependency):
     await store.users.delete(user_id)
     return 200
 
@@ -109,7 +120,7 @@ async def delete_user(user_id: int, store: StoreDependency):
 
 
 @app.post("/api/roles", response_model=openvols.models.StoredRole)
-async def create_role(role: openvols.models.Role, store: StoreDependency):
+async def create_role(role: openvols.models.Role, store: dependencies.StoreDependency):
     return await store.roles.create(role)
 
 
@@ -118,17 +129,19 @@ class ListStoredRoles(pydantic.BaseModel):
 
 
 @app.get("/api/roles", response_model=ListStoredRoles)
-async def list_roles(store: StoreDependency):
+async def list_roles(store: dependencies.StoreDependency):
     return ListStoredRoles(roles=await store.roles.list())
 
 
 @app.get("/api/roles/{role_id}", response_model=openvols.models.StoredRole)
-async def get_role(role_id: int, store: StoreDependency):
+async def get_role(role_id: int, store: dependencies.StoreDependency):
     return await store.roles.get(role_id)
 
 
 @app.patch("/api/roles/{role_id}", response_model=openvols.models.StoredRole)
-async def update_role(role_id: int, role: openvols.models.Role, store: StoreDependency):
+async def update_role(
+    role_id: int, role: openvols.models.Role, store: dependencies.StoreDependency
+):
     return await store.roles.update(role_id, role)
 
 
@@ -136,7 +149,7 @@ async def update_role(role_id: int, role: openvols.models.Role, store: StoreDepe
 
 
 @app.post("/api/locations", response_model=openvols.models.StoredLocation)
-async def create_location(location: openvols.models.Location, store: StoreDependency):
+async def create_location(location: openvols.models.Location, store: dependencies.StoreDependency):
     return await store.locations.create(location)
 
 
@@ -145,12 +158,12 @@ class ListStoredLocations(pydantic.BaseModel):
 
 
 @app.get("/api/locations", response_model=ListStoredLocations)
-async def list_locations(store: StoreDependency):
+async def list_locations(store: dependencies.StoreDependency):
     return ListStoredLocations(locations=await store.locations.list())
 
 
 @app.get("/api/locations/{location_id}", response_model=openvols.models.StoredLocation)
-async def get_location(location_id: int, store: StoreDependency):
+async def get_location(location_id: int, store: dependencies.StoreDependency):
     return await store.locations.get(location_id)
 
 
@@ -158,7 +171,7 @@ async def get_location(location_id: int, store: StoreDependency):
 async def update_location(
     location_id: int,
     location: openvols.models.Location,
-    store: StoreDependency,
+    store: dependencies.StoreDependency,
 ):
     return await store.locations.update(location_id, location)
 
@@ -167,7 +180,9 @@ async def update_location(
 
 
 @app.post("/api/agreements", response_model=openvols.models.StoredAgreement)
-async def create_agreement(agreement: openvols.models.Agreement, store: StoreDependency):
+async def create_agreement(
+    agreement: openvols.models.Agreement, store: dependencies.StoreDependency
+):
     return await store.agreements.create(agreement)
 
 
@@ -176,12 +191,12 @@ class ListStoredAgreements(pydantic.BaseModel):
 
 
 @app.get("/api/agreements", response_model=ListStoredAgreements)
-async def list_agreements(store: StoreDependency):
+async def list_agreements(store: dependencies.StoreDependency):
     return ListStoredAgreements(agreements=await store.agreements.list())
 
 
 @app.get("/api/agreements/{agreement_id}", response_model=openvols.models.StoredAgreement)
-async def get_agreement(agreement_id: int, store: StoreDependency):
+async def get_agreement(agreement_id: int, store: dependencies.StoreDependency):
     return await store.agreements.get(agreement_id)
 
 
@@ -189,7 +204,7 @@ async def get_agreement(agreement_id: int, store: StoreDependency):
 async def update_agreement(
     agreement_id: int,
     agreement: openvols.models.Agreement,
-    store: StoreDependency,
+    store: dependencies.StoreDependency,
 ):
     return await store.agreements.update(agreement_id, agreement)
 
@@ -200,7 +215,7 @@ async def update_agreement(
 @app.post("/api/opportunities", response_model=openvols.models.StoredOpportunity)
 async def create_opportunity(
     opportunity: openvols.models.Opportunity,
-    store: StoreDependency,
+    store: dependencies.StoreDependency,
 ):
     return await store.opportunities.create(opportunity)
 
@@ -210,7 +225,7 @@ class ListStoredOpportunities(pydantic.BaseModel):
 
 
 @app.get("/api/opportunities", response_model=ListStoredOpportunities)
-async def list_opportunities(store: StoreDependency):
+async def list_opportunities(store: dependencies.StoreDependency):
     return ListStoredOpportunities(opportunities=await store.opportunities.list())
 
 
@@ -218,7 +233,7 @@ async def list_opportunities(store: StoreDependency):
     "/api/opportunities/{opportunity_id}",
     response_model=openvols.models.StoredOpportunity,
 )
-async def get_opportunity(opportunity_id: int, store: StoreDependency):
+async def get_opportunity(opportunity_id: int, store: dependencies.StoreDependency):
     return await store.opportunities.get(opportunity_id)
 
 
@@ -229,7 +244,7 @@ async def get_opportunity(opportunity_id: int, store: StoreDependency):
 async def update_opportunity(
     opportunity_id: int,
     opportunity: openvols.models.Opportunity,
-    store: StoreDependency,
+    store: dependencies.StoreDependency,
 ):
     # A capacity increase here can open up approved slots -- the Store is
     # responsible for promoting waitlisted participants to fill them.
@@ -247,7 +262,7 @@ class RegisterParticipant(pydantic.BaseModel):
 
 
 @app.post("/api/participants", response_model=openvols.models.StoredParticipant)
-async def create_participant(participant: RegisterParticipant, store: StoreDependency):
+async def create_participant(participant: RegisterParticipant, store: dependencies.StoreDependency):
     # Registration decides approved vs. waitlisted based on capacity, so it
     # goes through register() rather than a plain create().
     return await store.participants.register(participant.user_id, participant.opportunity_id)
@@ -258,7 +273,7 @@ class ListStoredParticipants(pydantic.BaseModel):
 
 
 @app.get("/api/participants", response_model=ListStoredParticipants)
-async def list_participants(store: StoreDependency):
+async def list_participants(store: dependencies.StoreDependency):
     return ListStoredParticipants(participants=await store.participants.list())
 
 
@@ -266,7 +281,7 @@ async def list_participants(store: StoreDependency):
     "/api/participants/{participant_id}",
     response_model=openvols.models.StoredParticipant,
 )
-async def get_participant(participant_id: int, store: StoreDependency):
+async def get_participant(participant_id: int, store: dependencies.StoreDependency):
     return await store.participants.get(participant_id)
 
 
@@ -277,7 +292,7 @@ async def get_participant(participant_id: int, store: StoreDependency):
 async def update_participant(
     participant_id: int,
     participant: openvols.models.Participant,
-    store: StoreDependency,
+    store: dependencies.StoreDependency,
 ):
     return await store.participants.update(participant_id, participant)
 
@@ -286,7 +301,7 @@ async def update_participant(
     "/api/participants/{participant_id}/cancel",
     response_model=openvols.models.StoredParticipant,
 )
-async def cancel_participant(participant_id: int, store: StoreDependency):
+async def cancel_participant(participant_id: int, store: dependencies.StoreDependency):
     # Cancelling an approved participant can free a slot -- the Store is
     # responsible for promoting the next waitlisted participant, FIFO.
     await store.participants.cancel(participant_id)

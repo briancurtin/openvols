@@ -217,7 +217,7 @@ with the default role being the lowest access, `user`.
 
 Unauthenticated:
   - POST /api/auth/login
-  - POST /api/auth/validate
+  - GET /api/auth/validate
   - GET /api/organizations
   - GET /api/organizations/{organization_id}
   - GET /api/locations
@@ -289,6 +289,21 @@ Authenticated:
   - POST /api/participants/{participant_id}/approve
     - Role: manager
     - Not currently implemented, see https://github.com/briancurtin/openvols/issues/67
+
+#### Cookie sessions
+
+Authenticated requests carry a session in the `ov_session` cookie, set by
+`GET /api/auth/validate`. Sessions are server-side rows in Postgres: the
+cookie holds an opaque random token, and the database stores only its
+SHA-256 hash, so a database leak hands out no live sessions. A session
+lives for 14 days from issuance.
+
+The cookie is `HttpOnly` (never readable from JS -- credential handling
+stays out of the frontend's hands), `SameSite=Lax` (a magic-link click is a
+top-level GET navigation from an email client, and the session has to
+survive it -- `Strict` would not), and `Secure` by default. Local
+development over plain http can relax the last flag with
+`OPENVOLS_API_COOKIE_SECURE=false`.
 
 ## Notifications
 
