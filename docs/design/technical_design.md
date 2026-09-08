@@ -209,6 +209,87 @@ using `YYYY-MM-DD` format, such as `2026-08-17`.
 See [OpenAPI Spec](../openapi.json) for the full specification. This is available
 from a running instance at the `/docs` route.
 
+### Authentication and authorizatio
+
+Most APIs in this service have some authentication needs, save for some `GET`s
+and a few `POST`s. All authenticated APIs need some authorization role,
+with the default role being the lowest access, `user`.
+
+Unauthenticated:
+  - POST /api/auth/login
+  - POST /api/auth/validate
+  - GET /api/organizations
+  - GET /api/organizations/{organization_id}
+  - GET /api/locations
+  - GET /api/locations/{location_id}
+  - GET /api/opportunities
+  - GET /api/opportunities/{opportunity_id}
+  - GET /api/participants
+    - Unauthenticated response includes only count of participants for
+    the page loading an opportunity
+
+Authenticated:
+  - POST /api/organizations
+    - Role: users
+  - PATCH /api/organizations/{organization_id}
+    - Role: admin
+  - DELETE /api/organizations/{organization_id}
+    - Role: admin
+  - GET /api/users
+    - Role: manager
+  - GET /api/users/{user_id}
+    - Role: manager
+  - PATCH /api/users/{user_id}
+    - Role: user
+  - DELETE /api/users/{user_id}
+    - Role: user
+  - GET /api/roles
+    - Role: user
+  - POST /api/roles
+    - Role: super_admin
+  - GET /api/roles/{role_id}
+    - Role: user
+  - PATCH /api/roles/{role_id}
+    - Role: super_admin
+  - DELETE /api/roles/{role_id}
+    - Role: super_admin
+  - POST /api/locations
+    - Role: admin
+  - PATCH /api/locations/{location_id}
+    - Role: admin
+  - DELETE /api/locations/{location_id}
+    - Role: admin
+  - GET /api/agreements
+    - Role: manager
+  - POST /api/agreements
+    - Role: admin
+  - GET /api/agreements/{agreement_id}
+    - Role: user
+  - PATCH /api/agreements/{agreement_id}
+    - Role: admin
+  - DELETE /api/agreements/{agreement_id}
+    - Role: admin
+  - POST /api/opportunities
+    - Role: manager
+  - PATCH /api/opportunities/{opportunity_id}
+    - Role: manager
+  - DELETE /api/opportunities/{opportunity_id}
+    - Role: manager
+  - GET /api/participants
+    - Role: user sees restricted data, no last names, no contact info
+    - Role: manager sees full response shape
+  - GET /api/participants/{participant_id}
+    - Role: manager
+  - PATCH /api/participants/{participant_id}
+    - Role: user
+  - DELETE /api/participants/{participant_id}
+    - Role: user
+  - POST /api/participants/{participant_id}/cancel
+    - Role: user
+  - POST /api/participants/{participant_id}/approve
+    - Role: manager
+    - Not currently implemented, see https://github.com/briancurtin/openvols/issues/67
+
 ## Notifications
 
 Notifications for OpenVols are primarily handled through email, with optional
