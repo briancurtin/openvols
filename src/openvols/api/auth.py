@@ -26,7 +26,7 @@ __all__ = (
     "settings",
 )
 
-COOKIE_NAME = "ov_session"
+COOKIE_NAME = "openvols_session"
 
 
 class AuthSettings(pydantic_settings.BaseSettings):

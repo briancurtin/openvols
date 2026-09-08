@@ -85,13 +85,13 @@
         "operationId": "logout_api_auth_logout_post",
         "parameters": [
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
               "type": "string",
               "default": "",
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -118,7 +118,7 @@
         "operationId": "create_organization_api_organizations_post",
         "parameters": [
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -130,7 +130,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -236,7 +236,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -248,7 +248,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -328,7 +328,7 @@
         "operationId": "list_users_api_users_get",
         "parameters": [
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -340,7 +340,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -383,7 +383,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -395,7 +395,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -436,7 +436,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -448,7 +448,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -499,7 +499,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -511,7 +511,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -543,7 +543,7 @@
         "operationId": "create_role_api_roles_post",
         "parameters": [
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -555,7 +555,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -597,7 +597,7 @@
         "operationId": "list_roles_api_roles_get",
         "parameters": [
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -609,7 +609,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -652,7 +652,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -664,7 +664,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -705,7 +705,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -717,7 +717,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -761,7 +761,7 @@
         "operationId": "create_location_api_locations_post",
         "parameters": [
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -773,7 +773,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -879,7 +879,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -891,7 +891,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -935,7 +935,7 @@
         "operationId": "create_agreement_api_agreements_post",
         "parameters": [
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -947,7 +947,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -989,7 +989,7 @@
         "operationId": "list_agreements_api_agreements_get",
         "parameters": [
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -1001,7 +1001,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -1044,7 +1044,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -1056,7 +1056,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -1097,7 +1097,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -1109,7 +1109,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -1153,7 +1153,7 @@
         "operationId": "create_opportunity_api_opportunities_post",
         "parameters": [
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -1165,7 +1165,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -1271,7 +1271,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -1283,7 +1283,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -1390,7 +1390,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -1402,7 +1402,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -1443,7 +1443,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -1455,7 +1455,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
@@ -1508,7 +1508,7 @@
             }
           },
           {
-            "name": "ov_session",
+            "name": "openvols_session",
             "in": "cookie",
             "required": false,
             "schema": {
@@ -1520,7 +1520,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Ov Session"
+              "title": "Openvols Session"
             }
           }
         ],
