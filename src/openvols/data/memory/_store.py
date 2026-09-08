@@ -16,7 +16,7 @@ row-level locking, so this should probably have a similar id-based concept.
 """
 
 import builtins
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from functools import partial
 from random import randint
 from typing import Self
@@ -24,6 +24,7 @@ from typing import Self
 import pydantic
 
 from openvols import data, models
+from openvols.data import _store, _tokens
 
 NEW_ID = partial(randint, 1000, 10000)
 
@@ -69,13 +70,48 @@ class _InMemoryRepository[StoredT: models.StoredModel, InputT: pydantic.BaseMode
         del self._items[id]
 
 
+class _UserRepository:
+    """Plain CRUD, plus resolving a user by email for /api/auth/validate."""
+
+    def __init__(self):
+        self._repository = _InMemoryRepository(models.StoredUser)
+
+    async def create(self, item: models.User) -> models.StoredUser:
+        return await self._repository.create(item)
+
+    async def get(self, id: int) -> models.StoredUser:
+        return await self._repository.get(id)
+
+    async def list(self) -> builtins.list[models.StoredUser]:
+        return await self._repository.list()
+
+    async def update(self, id: int, item: models.User) -> models.StoredUser:
+        return await self._repository.update(id, item)
+
+    async def delete(self, id: int) -> None:
+        await self._repository.delete(id)
+
+    async def get_by_email(self, email: str) -> models.StoredUser:
+        """
+        Resolve a user by email address.
+
+        users.email has no uniqueness constraint yet, so "oldest wins" is the
+        defined tie-break for the rare case of duplicates.
+        """
+        matches = [user for user in await self._repository.list() if user.email == email]
+        if not matches:
+            raise data.NotFoundError("StoredUser", email)
+
+        return min(matches, key=lambda user: user.created)
+
+
 class _RoleRepository:
     """Plain CRUD, plus validating that organization_id/user_id reference real records."""
 
     def __init__(
         self,
         organizations: _InMemoryRepository[models.StoredOrganization, models.Organization],
-        users: _InMemoryRepository[models.StoredUser, models.User],
+        users: data.UserRepository,
     ):
         self._repository = _InMemoryRepository(models.StoredRole)
         self._organizations = organizations
@@ -167,7 +203,7 @@ class _ParticipantRepository:
     def __init__(
         self,
         opportunities: _InMemoryRepository[models.StoredOpportunity, models.Opportunity],
-        users: _InMemoryRepository[models.StoredUser, models.User],
+        users: data.UserRepository,
     ):
         self._opportunities = opportunities
         self._users = users
@@ -288,7 +324,7 @@ class _OpportunityRepository:
         self,
         repository: _InMemoryRepository[models.StoredOpportunity, models.Opportunity],
         locations: data.LocationRepository,
-        users: _InMemoryRepository[models.StoredUser, models.User],
+        users: data.UserRepository,
         agreements: data.AgreementRepository,
         participants: _ParticipantRepository,
     ):
@@ -324,6 +360,42 @@ class _OpportunityRepository:
         await self._repository.delete(id)
 
 
+class _SessionRepository:
+    """Sessions keyed by token hash; expiry is checked at read time."""
+
+    def __init__(self, users: data.UserRepository):
+        self._users = users
+        self._items: dict[str, models.StoredSession] = {}
+
+    async def create(
+        self, user_id: int, lifetime: timedelta = _store.SESSION_LIFETIME
+    ) -> models.IssuedSession:
+        await self._users.get(user_id)
+
+        now = datetime.now(UTC)
+        token = _tokens.generate()
+        stored = models.StoredSession(
+            id=NEW_ID(),
+            created=now,
+            updated=now,
+            user_id=user_id,
+            expires=now + lifetime,
+        )
+        self._items[_tokens.hashed(token)] = stored
+
+        return models.IssuedSession(token=token, **stored.model_dump())
+
+    async def get(self, token: str) -> models.StoredSession:
+        stored = self._items.get(_tokens.hashed(token))
+        if stored is None or stored.expires <= datetime.now(UTC):
+            raise data.InvalidSessionError
+
+        return stored
+
+    async def delete(self, token: str) -> None:
+        self._items.pop(_tokens.hashed(token), None)
+
+
 class MemoryStore:
     """
     In-memory Store: every repository is backed by a plain dict, and
@@ -334,7 +406,7 @@ class MemoryStore:
         self.organizations: data.OrganizationRepository = _InMemoryRepository(
             models.StoredOrganization
         )
-        self.users: data.UserRepository = _InMemoryRepository(models.StoredUser)
+        self.users: data.UserRepository = _UserRepository()
         self.roles: data.RoleRepository = _RoleRepository(self.organizations, self.users)
         self.locations: data.LocationRepository = _LocationRepository(self.organizations)
         self.agreements: data.AgreementRepository = _AgreementRepository(self.organizations)
@@ -349,6 +421,7 @@ class MemoryStore:
         self.opportunities: data.OpportunityRepository = _OpportunityRepository(
             opportunities, self.locations, self.users, self.agreements, self.participants
         )
+        self.sessions: data.SessionRepository = _SessionRepository(self.users)
 
     async def __aenter__(self) -> Self:
         return self

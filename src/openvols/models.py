@@ -334,3 +334,26 @@ class Participant(pydantic.BaseModel):
 
 class StoredParticipant(StoredModel, Participant):
     """A Participant in the data layer"""
+
+
+class Session(pydantic.BaseModel):
+    """An authenticated session belonging to a User."""
+
+    user_id: int
+    expires: datetime
+
+
+class StoredSession(StoredModel, Session):
+    """A Session in the data layer"""
+
+
+class IssuedSession(StoredSession):
+    """
+    A freshly created Session, carrying the one-time plaintext token.
+
+    The token exists in this shape and nowhere else: the store keeps only its
+    hash, so this is the single opportunity to hand it to the caller for the
+    Set-Cookie header. Reading a session back returns StoredSession.
+    """
+
+    token: str
