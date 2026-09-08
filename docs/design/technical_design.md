@@ -218,6 +218,10 @@ with the default role being the lowest access, `user`.
 Unauthenticated:
   - POST /api/auth/login
   - GET /api/auth/validate
+  - POST /api/auth/logout
+    - Clears the session cookie, and deletes the session row when the cookie
+      matches one. Not behind a session requirement, since an already-expired
+      or already-deleted session still needs to be able to shed its cookie.
   - GET /api/organizations
   - GET /api/organizations/{organization_id}
   - GET /api/locations
