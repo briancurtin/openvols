@@ -11,11 +11,13 @@ Postgres Store implementation, via asyncpg.
 import asyncio
 import builtins
 import typing
+from datetime import UTC, datetime, timedelta
 
 import asyncpg
 import pydantic
 
 from openvols import data, models
+from openvols.data import _store, _tokens
 
 
 class _BasicRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
@@ -123,6 +125,50 @@ class _BasicRepository[StoredT: models.StoredModel, InputT: pydantic.BaseModel]:
 
         if result == "DELETE 0":
             raise data.NotFoundError(self._stored_cls.__name__, id)
+
+
+class _UserRepository:
+    """Plain CRUD, plus resolving a user by email for /api/auth/validate."""
+
+    def __init__(self, store: PostgresStore):
+        self._store = store
+        self._repository = _BasicRepository(
+            store,
+            "users",
+            ("first_name", "last_name", "email", "email_reminders", "phone", "phone_reminders"),
+            models.StoredUser,
+        )
+
+    async def create(self, item: models.User) -> models.StoredUser:
+        return await self._repository.create(item)
+
+    async def get(self, id: int) -> models.StoredUser:
+        return await self._repository.get(id)
+
+    async def list(self) -> builtins.list[models.StoredUser]:
+        return await self._repository.list()
+
+    async def update(self, id: int, item: models.User) -> models.StoredUser:
+        return await self._repository.update(id, item)
+
+    async def delete(self, id: int) -> None:
+        await self._repository.delete(id)
+
+    async def get_by_email(self, email: str) -> models.StoredUser:
+        """
+        Resolve a user by email address.
+
+        users.email has no uniqueness constraint yet, so "oldest wins" is the
+        defined tie-break for the rare case of duplicates.
+        """
+        row = await self._store.pool.fetchrow(
+            "SELECT * FROM users WHERE email = $1 ORDER BY created LIMIT 1;", email
+        )
+
+        if row is None:
+            raise data.NotFoundError("StoredUser", email)
+
+        return models.StoredUser(**dict(row))
 
 
 class _RoleRepository:
@@ -725,6 +771,52 @@ class _ParticipantRepository:
         )
 
 
+class _SessionRepository:
+    """Sessions keyed by token hash; expiry is enforced in the WHERE clause."""
+
+    def __init__(self, store: PostgresStore):
+        self._store = store
+
+    async def create(
+        self, user_id: int, lifetime: timedelta = _store.SESSION_LIFETIME
+    ) -> models.IssuedSession:
+        await self._store.users.get(user_id)
+
+        token = _tokens.generate()
+        row = await self._store.pool.fetchrow(
+            """INSERT INTO sessions (user_id, token_hash, expires)
+               VALUES ($1, $2, $3)
+               RETURNING id, created, updated, user_id, expires;
+            """,
+            user_id,
+            _tokens.hashed(token),
+            datetime.now(UTC) + lifetime,
+        )
+
+        assert row is not None
+
+        return models.IssuedSession(token=token, **dict(row))
+
+    async def get(self, token: str) -> models.StoredSession:
+        row = await self._store.pool.fetchrow(
+            """SELECT id, created, updated, user_id, expires
+               FROM sessions
+               WHERE token_hash = $1 AND expires > NOW();
+            """,
+            _tokens.hashed(token),
+        )
+
+        if row is None:
+            raise data.InvalidSessionError
+
+        return models.StoredSession(**dict(row))
+
+    async def delete(self, token: str) -> None:
+        await self._store.pool.execute(
+            "DELETE FROM sessions WHERE token_hash = $1;", _tokens.hashed(token)
+        )
+
+
 class PostgresStore:
     """Postgres Store: every repository shares one asyncpg connection pool."""
 
@@ -746,19 +838,7 @@ class PostgresStore:
             ),
             models.StoredOrganization,
         )
-        self.users: data.UserRepository = _BasicRepository(
-            self,
-            "users",
-            (
-                "first_name",
-                "last_name",
-                "email",
-                "email_reminders",
-                "phone",
-                "phone_reminders",
-            ),
-            models.StoredUser,
-        )
+        self.users: data.UserRepository = _UserRepository(self)
         self.roles: data.RoleRepository = _RoleRepository(self)
         self.locations: data.LocationRepository = _LocationRepository(self)
         self.agreements: data.AgreementRepository = _AgreementRepository(self)
@@ -766,6 +846,7 @@ class PostgresStore:
         self.opportunities: data.OpportunityRepository = _OpportunityRepository(
             self, self.participants
         )
+        self.sessions: data.SessionRepository = _SessionRepository(self)
 
     @property
     def pool(self) -> asyncpg.Pool:

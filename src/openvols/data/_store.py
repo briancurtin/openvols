@@ -13,16 +13,19 @@ satisfies Store without inheriting from anything defined here.
 
 import builtins
 import typing
+from datetime import timedelta
 
 import pydantic_settings
 
 from openvols import models
 
 __all__ = (
+    "SESSION_LIFETIME",
     "AgreementRepository",
     "ConflictError",
     "DataError",
     "DataSettings",
+    "InvalidSessionError",
     "LocationRepository",
     "NotFoundError",
     "OpportunityRepository",
@@ -30,6 +33,7 @@ __all__ = (
     "ParticipantRepository",
     "Repository",
     "RoleRepository",
+    "SessionRepository",
     "Store",
     "UserRepository",
 )
@@ -43,9 +47,9 @@ class DataError(Exception):
 
 
 class NotFoundError(DataError):
-    """No record exists for the given id."""
+    """No record exists for the given id, or other lookup key such as an email."""
 
-    def __init__(self, resource: str, id: int):
+    def __init__(self, resource: str, id: int | str):
         self.resource = resource
         self.id = id
         super().__init__(f"{resource} {id!r} not found")
@@ -53,6 +57,16 @@ class NotFoundError(DataError):
 
 class ConflictError(DataError):
     """The requested change conflicts with existing state (e.g. a duplicate)."""
+
+
+class InvalidSessionError(DataError):
+    """
+    The token doesn't identify a live session -- unknown, expired, or deleted.
+
+    Distinct from NotFoundError so the API layer can answer 401 rather than
+    404, and deliberately carries no token in its message so a bad token never
+    reaches a log line.
+    """
 
 
 # ---- Configuration -------------------------------------------------------------
@@ -92,7 +106,7 @@ class OrganizationRepository(
 
 
 class UserRepository(Repository[models.StoredUser, models.User], typing.Protocol):
-    pass
+    async def get_by_email(self, email: str) -> models.StoredUser: ...
 
 
 class RoleRepository(Repository[models.StoredRole, models.Role], typing.Protocol):
@@ -140,6 +154,26 @@ class ParticipantRepository(typing.Protocol):
     async def cancel(self, participant_id: int) -> None: ...
 
 
+SESSION_LIFETIME = timedelta(days=14)
+
+
+class SessionRepository(typing.Protocol):
+    """
+    Sessions are addressed by their opaque token, not by id, so this doesn't
+    inherit Repository. The store owns token generation and hashing: no caller
+    ever holds the material needed to forge one, and both backends agree on the
+    stored form.
+    """
+
+    async def create(
+        self, user_id: int, lifetime: timedelta = SESSION_LIFETIME
+    ) -> models.IssuedSession: ...
+
+    async def get(self, token: str) -> models.StoredSession: ...
+
+    async def delete(self, token: str) -> None: ...
+
+
 class Store(typing.Protocol):
     """
     The single abstraction openvols.api depends on. A concrete backend
@@ -154,6 +188,7 @@ class Store(typing.Protocol):
     agreements: AgreementRepository
     opportunities: OpportunityRepository
     participants: ParticipantRepository
+    sessions: SessionRepository
 
     async def __aenter__(self) -> typing.Self: ...
     async def __aexit__(self, *exc: object) -> None: ...

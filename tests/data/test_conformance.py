@@ -5,12 +5,12 @@ place a backend's actual behavior diverges from what Store promises, since
 openvols.api is written against the abstraction, not a specific backend.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from openvols import models
-from openvols.data import ConflictError, NotFoundError
+from openvols.data import ConflictError, InvalidSessionError, NotFoundError
 from openvols.data.postgres import PostgresStore
 
 
@@ -250,3 +250,69 @@ async def test_opportunity_empty_notes_stored_as_null(store):
         "SELECT notes FROM opportunities WHERE id = $1;", opportunity.id
     )
     assert raw_notes is None
+
+
+# ---- Sessions (#72) -----------------------------------------------------------
+
+
+async def test_session_create_and_get_round_trip(store):
+    user = await store.users.create(_user("session-round-trip@example.org"))
+
+    issued = await store.sessions.create(user.id)
+    assert issued.token
+    assert issued.expires > datetime.now(UTC)
+
+    fetched = await store.sessions.get(issued.token)
+    assert fetched.user_id == user.id
+
+
+async def test_session_create_twice_yields_independent_tokens(store):
+    user = await store.users.create(_user("multi-device@example.org"))
+
+    first = await store.sessions.create(user.id)
+    second = await store.sessions.create(user.id)
+
+    assert first.token != second.token
+    assert (await store.sessions.get(first.token)).user_id == user.id
+    assert (await store.sessions.get(second.token)).user_id == user.id
+
+
+async def test_session_get_unknown_token_raises_invalid(store):
+    with pytest.raises(InvalidSessionError):
+        await store.sessions.get("not-a-real-token")
+
+
+async def test_session_get_expired_raises_invalid(store):
+    user = await store.users.create(_user("expired-session@example.org"))
+    issued = await store.sessions.create(user.id, lifetime=timedelta(seconds=-1))
+
+    with pytest.raises(InvalidSessionError):
+        await store.sessions.get(issued.token)
+
+
+async def test_session_delete_invalidates_and_is_idempotent(store):
+    user = await store.users.create(_user("logout@example.org"))
+    issued = await store.sessions.create(user.id)
+
+    await store.sessions.delete(issued.token)
+    with pytest.raises(InvalidSessionError):
+        await store.sessions.get(issued.token)
+
+    await store.sessions.delete(issued.token)  # must not raise
+
+
+async def test_session_create_for_missing_user_raises_not_found(store):
+    with pytest.raises(NotFoundError):
+        await store.sessions.create(-999)
+
+
+async def test_user_get_by_email_round_trips(store):
+    user = await store.users.create(_user("lookup@example.org"))
+
+    fetched = await store.users.get_by_email("lookup@example.org")
+    assert fetched.id == user.id
+
+
+async def test_user_get_by_email_unknown_raises_not_found(store):
+    with pytest.raises(NotFoundError):
+        await store.users.get_by_email("nobody@example.org")
