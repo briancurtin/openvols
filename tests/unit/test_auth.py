@@ -1,18 +1,17 @@
 """
 Coverage for cookie mechanics in openvols.api.auth.
 
-/api/auth/validate is the only route that issues a cookie until PR 4 adds
-require_session to the rest of the authenticated routes, so a temporary probe
-route below exercises that dependency end to end.
+require_session itself is exercised end to end via the protected routes in
+tests/unit/test_routes.py; this module covers the cookie flags /api/auth/validate
+sets.
 """
 
 import http.cookies
 
-import fastapi
 import fastapi.testclient
 import pytest
 
-from openvols.api import app, auth, routers
+from openvols.api import auth, routers
 
 
 @pytest.fixture
@@ -83,36 +82,3 @@ def test_validate_respects_insecure_cookie_setting(monkeypatch, client, user_id)
     assert cookie["httponly"]
     assert cookie["samesite"] == "lax"
     assert cookie["path"] == "/"
-
-
-# ---- Temporary probe route --------------------------------------------------
-# No production route requires a session until PR 4; this exercises
-# require_session end to end and is removed once a real route does.
-
-
-@app.get("/api/_test/whoami")
-async def _whoami(session: auth.SessionDependency):
-    return {"user_id": session.user_id}
-
-
-def test_issued_token_authenticates(client, user_id):
-    client.get("/api/auth/validate", params={"token": "jane@example.org"})
-
-    response = client.get("/api/_test/whoami")
-
-    assert response.status_code == 200
-    assert response.json()["user_id"] == user_id
-
-
-def test_missing_cookie_is_401(client):
-    response = client.get("/api/_test/whoami")
-
-    assert response.status_code == 401
-
-
-def test_garbage_cookie_is_401(client):
-    client.cookies.set(auth.COOKIE_NAME, "garbage")
-
-    response = client.get("/api/_test/whoami")
-
-    assert response.status_code == 401

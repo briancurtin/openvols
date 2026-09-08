@@ -7,12 +7,32 @@ MemoryStore -- state never leaks between tests.
 import fastapi.testclient
 import pytest
 
-from openvols.api import routers
+from openvols.api import auth, routers
+
+_LOGIN_USER_BODY = {
+    "first_name": "Login",
+    "last_name": "User",
+    "email": "login@example.org",
+    "email_reminders": True,
+    "phone": "+12025550182",
+    "phone_reminders": True,
+}
 
 
 @pytest.fixture
 def client():
-    with fastapi.testclient.TestClient(routers.app) as client:
+    """An authenticated client: every protected route needs a session to test past it."""
+    # https base_url: the default Secure cookie policy means httpx's cookie
+    # jar won't echo the cookie back on a later request over plain http.
+    with fastapi.testclient.TestClient(routers.app, base_url="https://testserver") as client:
+        client.post("/api/users", json=_LOGIN_USER_BODY)
+        client.get("/api/auth/validate", params={"token": _LOGIN_USER_BODY["email"]})
+        yield client
+
+
+@pytest.fixture
+def anonymous_client():
+    with fastapi.testclient.TestClient(routers.app, base_url="https://testserver") as client:
         yield client
 
 
@@ -149,7 +169,11 @@ def test_list(client, resource, body_fixture):
     response = client.get(f"/api/{resource}")
 
     assert response.status_code == 200
-    assert response.json() == {resource: []}
+    if resource == "users":
+        # The client fixture's login user is already in the store.
+        assert [u["email"] for u in response.json()["users"]] == [_LOGIN_USER_BODY["email"]]
+    else:
+        assert response.json() == {resource: []}
 
 
 @pytest.mark.parametrize("resource, body_fixture", RESOURCES)
@@ -271,3 +295,54 @@ def test_login(client):
 
 
 # /api/auth/validate's cookie-issuing behavior is covered in tests/unit/test_auth.py.
+
+
+# ---- Session enforcement (#72) -----------------------------------------------
+# Every route the TDD marks authenticated must 401 without a session. Bodies
+# don't matter here -- require_session runs before the handler ever sees one --
+# so a placeholder id is enough for the path-parameter routes.
+
+PROTECTED_ROUTES = [
+    ("POST", "/api/organizations"),
+    ("PATCH", "/api/organizations/1"),
+    ("GET", "/api/users"),
+    ("GET", "/api/users/1"),
+    ("PATCH", "/api/users/1"),
+    ("DELETE", "/api/users/1"),
+    ("POST", "/api/roles"),
+    ("GET", "/api/roles"),
+    ("GET", "/api/roles/1"),
+    ("PATCH", "/api/roles/1"),
+    ("POST", "/api/locations"),
+    ("PATCH", "/api/locations/1"),
+    ("POST", "/api/agreements"),
+    ("GET", "/api/agreements"),
+    ("GET", "/api/agreements/1"),
+    ("PATCH", "/api/agreements/1"),
+    ("POST", "/api/opportunities"),
+    ("PATCH", "/api/opportunities/1"),
+    ("GET", "/api/participants/1"),
+    ("PATCH", "/api/participants/1"),
+    ("POST", "/api/participants/1/cancel"),
+]
+
+
+@pytest.mark.parametrize("method, path", PROTECTED_ROUTES)
+def test_requires_session(anonymous_client, method, path):
+    response = anonymous_client.request(method, path, json={})
+
+    assert response.status_code == 401
+
+
+def test_garbage_cookie_is_401(anonymous_client):
+    anonymous_client.cookies.set(auth.COOKIE_NAME, "garbage")
+
+    response = anonymous_client.get("/api/users")
+
+    assert response.status_code == 401
+
+
+def test_public_route_works_for_anonymous_client(anonymous_client):
+    response = anonymous_client.get("/api/organizations")
+
+    assert response.status_code == 200

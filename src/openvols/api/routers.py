@@ -40,7 +40,11 @@ async def validate_token(
 # ---- Organizations ----
 
 
-@app.post("/api/organizations", response_model=openvols.models.StoredOrganization)
+@app.post(
+    "/api/organizations",
+    response_model=openvols.models.StoredOrganization,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def create_organization(
     organization: openvols.models.Organization,
     store: dependencies.StoreDependency,
@@ -72,6 +76,7 @@ async def get_organization(organization_id: int, store: dependencies.StoreDepend
 @app.patch(
     "/api/organizations/{organization_id}",
     response_model=openvols.models.StoredOrganization,
+    dependencies=[fastapi.Depends(auth.require_session)],
 )
 async def update_organization(
     organization_id: int,
@@ -93,24 +98,36 @@ class ListStoredUsers(pydantic.BaseModel):
     users: list[openvols.models.StoredUser] = []
 
 
-@app.get("/api/users", response_model=ListStoredUsers)
+@app.get(
+    "/api/users",
+    response_model=ListStoredUsers,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def list_users(store: dependencies.StoreDependency):
     return ListStoredUsers(users=await store.users.list())
 
 
-@app.get("/api/users/{user_id}", response_model=openvols.models.StoredUser)
+@app.get(
+    "/api/users/{user_id}",
+    response_model=openvols.models.StoredUser,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def get_user(user_id: int, store: dependencies.StoreDependency):
     return await store.users.get(user_id)
 
 
-@app.patch("/api/users/{user_id}", response_model=openvols.models.StoredUser)
+@app.patch(
+    "/api/users/{user_id}",
+    response_model=openvols.models.StoredUser,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def update_user(
     user_id: int, user: openvols.models.User, store: dependencies.StoreDependency
 ):
     return await store.users.update(user_id, user)
 
 
-@app.delete("/api/users/{user_id}")
+@app.delete("/api/users/{user_id}", dependencies=[fastapi.Depends(auth.require_session)])
 async def delete_user(user_id: int, store: dependencies.StoreDependency):
     await store.users.delete(user_id)
     return 200
@@ -119,7 +136,11 @@ async def delete_user(user_id: int, store: dependencies.StoreDependency):
 # ---- Roles ----
 
 
-@app.post("/api/roles", response_model=openvols.models.StoredRole)
+@app.post(
+    "/api/roles",
+    response_model=openvols.models.StoredRole,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def create_role(role: openvols.models.Role, store: dependencies.StoreDependency):
     return await store.roles.create(role)
 
@@ -128,17 +149,29 @@ class ListStoredRoles(pydantic.BaseModel):
     roles: list[openvols.models.StoredRole] = []
 
 
-@app.get("/api/roles", response_model=ListStoredRoles)
+@app.get(
+    "/api/roles",
+    response_model=ListStoredRoles,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def list_roles(store: dependencies.StoreDependency):
     return ListStoredRoles(roles=await store.roles.list())
 
 
-@app.get("/api/roles/{role_id}", response_model=openvols.models.StoredRole)
+@app.get(
+    "/api/roles/{role_id}",
+    response_model=openvols.models.StoredRole,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def get_role(role_id: int, store: dependencies.StoreDependency):
     return await store.roles.get(role_id)
 
 
-@app.patch("/api/roles/{role_id}", response_model=openvols.models.StoredRole)
+@app.patch(
+    "/api/roles/{role_id}",
+    response_model=openvols.models.StoredRole,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def update_role(
     role_id: int, role: openvols.models.Role, store: dependencies.StoreDependency
 ):
@@ -148,7 +181,11 @@ async def update_role(
 # ---- Locations ----
 
 
-@app.post("/api/locations", response_model=openvols.models.StoredLocation)
+@app.post(
+    "/api/locations",
+    response_model=openvols.models.StoredLocation,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def create_location(location: openvols.models.Location, store: dependencies.StoreDependency):
     return await store.locations.create(location)
 
@@ -167,7 +204,11 @@ async def get_location(location_id: int, store: dependencies.StoreDependency):
     return await store.locations.get(location_id)
 
 
-@app.patch("/api/locations/{location_id}", response_model=openvols.models.StoredLocation)
+@app.patch(
+    "/api/locations/{location_id}",
+    response_model=openvols.models.StoredLocation,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def update_location(
     location_id: int,
     location: openvols.models.Location,
@@ -179,7 +220,11 @@ async def update_location(
 # ---- Agreements ----
 
 
-@app.post("/api/agreements", response_model=openvols.models.StoredAgreement)
+@app.post(
+    "/api/agreements",
+    response_model=openvols.models.StoredAgreement,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def create_agreement(
     agreement: openvols.models.Agreement, store: dependencies.StoreDependency
 ):
@@ -190,17 +235,29 @@ class ListStoredAgreements(pydantic.BaseModel):
     agreements: list[openvols.models.StoredAgreement] = []
 
 
-@app.get("/api/agreements", response_model=ListStoredAgreements)
+@app.get(
+    "/api/agreements",
+    response_model=ListStoredAgreements,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def list_agreements(store: dependencies.StoreDependency):
     return ListStoredAgreements(agreements=await store.agreements.list())
 
 
-@app.get("/api/agreements/{agreement_id}", response_model=openvols.models.StoredAgreement)
+@app.get(
+    "/api/agreements/{agreement_id}",
+    response_model=openvols.models.StoredAgreement,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def get_agreement(agreement_id: int, store: dependencies.StoreDependency):
     return await store.agreements.get(agreement_id)
 
 
-@app.patch("/api/agreements/{agreement_id}", response_model=openvols.models.StoredAgreement)
+@app.patch(
+    "/api/agreements/{agreement_id}",
+    response_model=openvols.models.StoredAgreement,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def update_agreement(
     agreement_id: int,
     agreement: openvols.models.Agreement,
@@ -212,7 +269,11 @@ async def update_agreement(
 # ---- Opportunities ----
 
 
-@app.post("/api/opportunities", response_model=openvols.models.StoredOpportunity)
+@app.post(
+    "/api/opportunities",
+    response_model=openvols.models.StoredOpportunity,
+    dependencies=[fastapi.Depends(auth.require_session)],
+)
 async def create_opportunity(
     opportunity: openvols.models.Opportunity,
     store: dependencies.StoreDependency,
@@ -240,6 +301,7 @@ async def get_opportunity(opportunity_id: int, store: dependencies.StoreDependen
 @app.patch(
     "/api/opportunities/{opportunity_id}",
     response_model=openvols.models.StoredOpportunity,
+    dependencies=[fastapi.Depends(auth.require_session)],
 )
 async def update_opportunity(
     opportunity_id: int,
@@ -280,6 +342,7 @@ async def list_participants(store: dependencies.StoreDependency):
 @app.get(
     "/api/participants/{participant_id}",
     response_model=openvols.models.StoredParticipant,
+    dependencies=[fastapi.Depends(auth.require_session)],
 )
 async def get_participant(participant_id: int, store: dependencies.StoreDependency):
     return await store.participants.get(participant_id)
@@ -288,6 +351,7 @@ async def get_participant(participant_id: int, store: dependencies.StoreDependen
 @app.patch(
     "/api/participants/{participant_id}",
     response_model=openvols.models.StoredParticipant,
+    dependencies=[fastapi.Depends(auth.require_session)],
 )
 async def update_participant(
     participant_id: int,
@@ -300,6 +364,7 @@ async def update_participant(
 @app.post(
     "/api/participants/{participant_id}/cancel",
     response_model=openvols.models.StoredParticipant,
+    dependencies=[fastapi.Depends(auth.require_session)],
 )
 async def cancel_participant(participant_id: int, store: dependencies.StoreDependency):
     # Cancelling an approved participant can free a slot -- the Store is
