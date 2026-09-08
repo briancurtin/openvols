@@ -181,17 +181,6 @@ def test_update(client, request, resource, body_fixture):
     assert response.json()["id"] == created["id"]
 
 
-@pytest.mark.parametrize("resource, body_fixture", RESOURCES)
-def test_delete(client, request, resource, body_fixture):
-    body = request.getfixturevalue(body_fixture)
-    created = client.post(f"/api/{resource}", json=body).json()
-
-    response = client.delete(f"/api/{resource}/{created['id']}")
-
-    assert response.status_code == 200
-    assert client.get(f"/api/{resource}/{created['id']}").status_code == 404
-
-
 # ---- Participants / registration engine -------------------------------------
 
 
@@ -243,13 +232,6 @@ def test_cancel_participant(client, registered_participant):
     assert response.status_code == 200
     assert response.json()["cancelled"] is True
     assert response.json()["approved"] is False
-
-
-def test_delete_participant(client, registered_participant):
-    response = client.delete(f"/api/participants/{registered_participant['id']}")
-
-    assert response.status_code == 200
-    assert client.get(f"/api/participants/{registered_participant['id']}").status_code == 404
 
 
 def test_registration_waitlists_over_capacity(client, user_body, opportunity_body):

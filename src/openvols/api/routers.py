@@ -72,12 +72,6 @@ async def update_organization(
     return await store.organizations.update(organization_id, organization)
 
 
-@app.delete("/api/organizations/{organization_id}")
-async def delete_organization(organization_id: int, store: StoreDependency):
-    await store.organizations.delete(organization_id)
-    return 200
-
-
 # ---- Users ----
 
 
@@ -138,12 +132,6 @@ async def update_role(role_id: int, role: openvols.models.Role, store: StoreDepe
     return await store.roles.update(role_id, role)
 
 
-@app.delete("/api/roles/{role_id}")
-async def delete_role(role_id: int, store: StoreDependency):
-    await store.roles.delete(role_id)
-    return 200
-
-
 # ---- Locations ----
 
 
@@ -175,12 +163,6 @@ async def update_location(
     return await store.locations.update(location_id, location)
 
 
-@app.delete("/api/locations/{location_id}")
-async def delete_location(location_id: int, store: StoreDependency):
-    await store.locations.delete(location_id)
-    return 200
-
-
 # ---- Agreements ----
 
 
@@ -210,12 +192,6 @@ async def update_agreement(
     store: StoreDependency,
 ):
     return await store.agreements.update(agreement_id, agreement)
-
-
-@app.delete("/api/agreements/{agreement_id}")
-async def delete_agreement(agreement_id: int, store: StoreDependency):
-    await store.agreements.delete(agreement_id)
-    return 200
 
 
 # ---- Opportunities ----
@@ -258,12 +234,6 @@ async def update_opportunity(
     # A capacity increase here can open up approved slots -- the Store is
     # responsible for promoting waitlisted participants to fill them.
     return await store.opportunities.update(opportunity_id, opportunity)
-
-
-@app.delete("/api/opportunities/{opportunity_id}")
-async def delete_opportunity(opportunity_id: int, store: StoreDependency):
-    await store.opportunities.delete(opportunity_id)
-    return 200
 
 
 # ---- Participants ----
@@ -321,9 +291,3 @@ async def cancel_participant(participant_id: int, store: StoreDependency):
     # responsible for promoting the next waitlisted participant, FIFO.
     await store.participants.cancel(participant_id)
     return await store.participants.get(participant_id)
-
-
-@app.delete("/api/participants/{participant_id}")
-async def delete_participant(participant_id: int, store: StoreDependency):
-    await store.participants.delete(participant_id)
-    return 200
