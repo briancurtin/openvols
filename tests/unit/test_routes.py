@@ -270,7 +270,4 @@ def test_login(client):
     assert response.status_code == 200
 
 
-def test_validate_token(client):
-    response = client.get("/api/auth/validate", params={"token": "some-token"})
-
-    assert response.status_code == 200
+# /api/auth/validate's cookie-issuing behavior is covered in tests/unit/test_auth.py.
