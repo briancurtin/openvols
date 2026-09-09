@@ -817,12 +817,28 @@ class _SessionRepository:
         )
 
 
+class _HealthRepository:
+    """Implements a health check on Postgres connectivity"""
+
+    def __init__(self, store: PostgresStore):
+        self._store = store
+
+    async def get(self) -> bool:
+        """Check if Postgres can connect and execute a query"""
+        try:
+            await self._store.pool.fetchrow("SELECT 1;")
+            return True
+        except Exception:  # noqa: BLE001
+            return False
+
+
 class PostgresStore:
     """Postgres Store: every repository shares one asyncpg connection pool."""
 
     def __init__(self, dsn: str):
         self._dsn = dsn
         self._pool: asyncpg.Pool | None = None
+        self.health: data.HealthRepository = _HealthRepository(self)
         self.organizations: data.OrganizationRepository = _BasicRepository(
             self,
             "organizations",

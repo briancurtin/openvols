@@ -20,5 +20,11 @@ class FileSender(abc.ABC):
         self.temp_file.close()
         self.directory.cleanup()
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        pass
+
     @abc.abstractmethod
     async def send(self, message) -> None: ...

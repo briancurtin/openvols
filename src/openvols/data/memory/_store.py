@@ -396,6 +396,17 @@ class _SessionRepository:
         self._items.pop(_tokens.hashed(token), None)
 
 
+class _HealthRepository:
+    """Implements a health check for the in-memory store
+
+    This is not really 'necessary' in the same sense as it is for
+    a real database, but we fulfill the protocol.
+    """
+
+    async def get(self) -> bool:
+        return True
+
+
 class MemoryStore:
     """
     In-memory Store: every repository is backed by a plain dict, and
@@ -403,6 +414,7 @@ class MemoryStore:
     """
 
     def __init__(self) -> None:
+        self.health: data.HealthRepository = _HealthRepository()
         self.organizations: data.OrganizationRepository = _InMemoryRepository(
             models.StoredOrganization
         )

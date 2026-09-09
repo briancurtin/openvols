@@ -36,6 +36,24 @@ def anonymous_client():
         yield client
 
 
+@pytest.fixture(params=[routers.dependencies.get_store, routers.dependencies.get_email_sender])
+def anonymous_client_dependency_down(request):
+    with fastapi.testclient.TestClient(routers.app, base_url="https://testserver") as client:
+
+        class NestedHealth:
+            async def get(self):
+                return not bool(request.param == routers.dependencies.get_store)
+
+        class Deps:
+            health = NestedHealth()
+
+            async def check(self):
+                return not bool(request.param == routers.dependencies.get_email_sender)
+
+        client.app.dependency_overrides[request.param] = lambda: Deps()
+        yield client
+
+
 # ---- Payload fixtures ------------------------------------------------------
 # Each *_body fixture returns a dict shaped like the corresponding request
 # model. Models reference other aggregates by id (see models.py), so fixtures
@@ -346,3 +364,52 @@ def test_public_route_works_for_anonymous_client(anonymous_client):
     response = anonymous_client.get("/api/organizations")
 
     assert response.status_code == 200
+
+
+# liveness/readiness
+
+
+def test_liveness(anonymous_client):
+    response = anonymous_client.get("/api/_health/live")
+    assert response.status_code == 200
+    assert response.json()["status"] == "live"
+
+
+def test_readiness(anonymous_client):
+    response = anonymous_client.get("/api/_health/ready")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
+
+
+@pytest.mark.parametrize(
+    "dependency, status",
+    [
+        (routers.dependencies.get_store, "not ready (db: False, email: True)"),
+        (routers.dependencies.get_email_sender, "not ready (db: True, email: False)"),
+    ],
+)
+def test_anonymous_client_dependency_down(dependency, status):
+    with fastapi.testclient.TestClient(routers.app, base_url="https://testserver") as client:
+
+        class NestedHealth:
+            def __init__(self, dependency):
+                self.dependency = dependency
+
+            async def get(self) -> bool:
+                # DB check is like this due to repository pattern
+                return not bool(self.dependency == routers.dependencies.get_store)
+
+        class Deps:
+            def __init__(self, dependency):
+                self.dependency = dependency
+                self.health = NestedHealth(dependency)
+
+            async def check(self) -> bool:
+                # Email's check is flatter
+                return not bool(self.dependency == routers.dependencies.get_email_sender)
+
+        client.app.dependency_overrides[dependency] = lambda: Deps(dependency)
+
+        response = client.get("/api/_health/ready")
+        assert response.status_code == 503
+        assert response.json()["status"] == status

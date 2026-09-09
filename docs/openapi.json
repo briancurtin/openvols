@@ -5,6 +5,44 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/_health/live": {
+      "get": {
+        "summary": "Liveness",
+        "description": "Liveness check",
+        "operationId": "liveness_api__health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/_health/ready": {
+      "get": {
+        "summary": "Readiness",
+        "description": "Readiness check",
+        "operationId": "readiness_api__health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "summary": "Login",
@@ -1623,6 +1661,19 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse"
       },
       "ListStoredAgreements": {
         "properties": {
