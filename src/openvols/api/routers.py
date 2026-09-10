@@ -1,3 +1,4 @@
+import asyncio
 import typing
 
 import fastapi
@@ -5,6 +6,52 @@ import pydantic
 
 import openvols.models
 from openvols.api import app, auth, dependencies
+
+
+class HealthResponse(pydantic.BaseModel):
+    """A health verdict, plus the per-dependency results behind it
+
+    checks is empty for liveness, which depends on nothing.
+    """
+
+    status: str
+    checks: dict[str, bool] = {}
+
+
+@app.get("/api/_health/live", response_model=HealthResponse)
+async def liveness(response: fastapi.Response):
+    """Liveness check"""
+    # Prevent callers from caching stale liveness responses
+    response.headers["Cache-Control"] = "no-store"
+    response.status_code = 200
+
+    return HealthResponse(status="live")
+
+
+@app.get("/api/_health/ready", response_model=HealthResponse)
+async def readiness(
+    response: fastapi.Response,
+    store: dependencies.StoreDependency,
+    email: dependencies.EmailSenderDependency,
+):
+    """Readiness check"""
+    # Prevent callers from caching stale liveness responses
+    response.headers["Cache-Control"] = "no-store"
+
+    async with asyncio.TaskGroup() as tg:
+        db_task = tg.create_task(store.health.get())
+        email_task = tg.create_task(email.check())
+
+    checks = {"db": db_task.result(), "email": email_task.result()}
+
+    if all(checks.values()):
+        response.status_code = 200
+        status = "ready"
+    else:
+        response.status_code = 503
+        status = "not_ready"
+
+    return HealthResponse(status=status, checks=checks)
 
 
 class LoginEmail(pydantic.BaseModel):

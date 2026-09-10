@@ -20,6 +20,28 @@ class SendGridEmailSender:
         self._client = sendgrid.SendGridAPIClient(api_key)
         self._from_email = from_email
 
+    async def __aenter__(self):
+        # This is a noop but is necessary to satisfy the protocol because
+        # dependency injection in FastAPI uses async context managers
+        return self
+
+    async def __aexit__(self, *exc):
+        pass
+
+    async def check(self) -> bool:
+        """
+        Report whether SendGrid is reachable with a valid API key
+
+        This calls a simple username.get to verify some connctivity without
+        sending an email or some other side-effect.
+        """
+        try:
+            response = await asyncio.to_thread(self._client.client.user.username.get)
+        except Exception:  # noqa: BLE001
+            return False
+
+        return response.status_code == 200
+
     async def send(self, message: EmailMessage) -> None:
         mail_message = mail.Mail(
             from_email=self._from_email,

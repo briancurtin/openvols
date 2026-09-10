@@ -8,3 +8,6 @@ Callers should import those subpackages directly, e.g.
 `from openvols.notifications import email`, rather than reaching into a
 specific backend such as openvols.notifications.email.sendgrid.
 """
+
+from openvols.notifications.email import *
+from openvols.notifications.sms import *

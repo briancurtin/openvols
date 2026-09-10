@@ -5,13 +5,19 @@ import fastapi
 import fastapi.responses
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-from openvols import data, telemetry
+from openvols import data, notifications, telemetry
 
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI) -> typing.AsyncIterator[None]:
-    async with data.create_store(data.DataSettings()) as store:
+    async with (
+        data.create_store(data.DataSettings()) as store,
+        notifications.email.create_email_sender(
+            notifications.email.EmailSettings()
+        ) as email_sender,
+    ):
         app.state.store = store
+        app.state.email_sender = email_sender
         yield
 
 

@@ -36,6 +36,29 @@ def anonymous_client():
         yield client
 
 
+@pytest.fixture
+def dependency_down(anonymous_client):
+    """Override one health dependency to report itself down, then restore it.
+
+    dependency_overrides lives on the module-level app singleton, so an override
+    left in place leaks into every later test. That is exactly what made these
+    cases fail as a pair while each passed alone: the first case's dead store
+    was still installed when the second case ran.
+    """
+    installed = []
+
+    def install(dependency, stub):
+        anonymous_client.app.dependency_overrides[dependency] = lambda: stub
+        installed.append(dependency)
+
+        return anonymous_client
+
+    yield install
+
+    for dependency in installed:
+        anonymous_client.app.dependency_overrides.pop(dependency, None)
+
+
 # ---- Payload fixtures ------------------------------------------------------
 # Each *_body fixture returns a dict shaped like the corresponding request
 # model. Models reference other aggregates by id (see models.py), so fixtures
@@ -344,5 +367,64 @@ def test_garbage_cookie_is_401(anonymous_client):
 
 def test_public_route_works_for_anonymous_client(anonymous_client):
     response = anonymous_client.get("/api/organizations")
+
+    assert response.status_code == 200
+
+
+# liveness/readiness
+
+
+class _DownStore:
+    """A Store whose health check reports the database unreachable"""
+
+    class health:
+        @staticmethod
+        async def get() -> bool:
+            return False
+
+
+class _DownEmailSender:
+    """An EmailSender whose check reports the provider unreachable"""
+
+    async def check(self) -> bool:
+        return False
+
+
+def test_liveness(anonymous_client):
+    response = anonymous_client.get("/api/_health/live")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "live", "checks": {}}
+
+
+def test_readiness(anonymous_client):
+    response = anonymous_client.get("/api/_health/ready")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ready", "checks": {"db": True, "email": True}}
+
+
+@pytest.mark.parametrize(
+    "dependency, stub, checks",
+    [
+        (routers.dependencies.get_store, _DownStore(), {"db": False, "email": True}),
+        (routers.dependencies.get_email_sender, _DownEmailSender(), {"db": True, "email": False}),
+    ],
+)
+def test_readiness_reports_a_down_dependency(dependency_down, dependency, stub, checks):
+    # Only one dependency is overridden per case. The other stays real --
+    # MemoryStore and FileEmailSender both report healthy -- which is what makes
+    # the asymmetric `checks` assertion meaningful.
+    client = dependency_down(dependency, stub)
+
+    response = client.get("/api/_health/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {"status": "not_ready", "checks": checks}
+
+
+def test_readiness_is_healthy_after_an_override_test(anonymous_client):
+    """Guards the leak: a stale dependency_overrides entry used to poison this."""
+    response = anonymous_client.get("/api/_health/ready")
 
     assert response.status_code == 200

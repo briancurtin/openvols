@@ -25,6 +25,7 @@ __all__ = (
     "ConflictError",
     "DataError",
     "DataSettings",
+    "HealthRepository",
     "InvalidSessionError",
     "LocationRepository",
     "NotFoundError",
@@ -174,6 +175,12 @@ class SessionRepository(typing.Protocol):
     async def delete(self, token: str) -> None: ...
 
 
+class HealthRepository(typing.Protocol):
+    """Allow a Store to report its health, e.g. database connectivity."""
+
+    async def get(self) -> bool: ...
+
+
 class Store(typing.Protocol):
     """
     The single abstraction openvols.api depends on. A concrete backend
@@ -181,6 +188,7 @@ class Store(typing.Protocol):
     satisfies this structurally -- no inheritance required.
     """
 
+    health: HealthRepository
     organizations: OrganizationRepository
     users: UserRepository
     roles: RoleRepository
