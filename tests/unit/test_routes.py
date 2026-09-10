@@ -36,22 +36,27 @@ def anonymous_client():
         yield client
 
 
-@pytest.fixture(params=[routers.dependencies.get_store, routers.dependencies.get_email_sender])
-def anonymous_client_dependency_down(request):
-    with fastapi.testclient.TestClient(routers.app, base_url="https://testserver") as client:
+@pytest.fixture
+def dependency_down(anonymous_client):
+    """Override one health dependency to report itself down, then restore it.
 
-        class NestedHealth:
-            async def get(self):
-                return not bool(request.param == routers.dependencies.get_store)
+    dependency_overrides lives on the module-level app singleton, so an override
+    left in place leaks into every later test. That is exactly what made these
+    cases fail as a pair while each passed alone: the first case's dead store
+    was still installed when the second case ran.
+    """
+    installed = []
 
-        class Deps:
-            health = NestedHealth()
+    def install(dependency, stub):
+        anonymous_client.app.dependency_overrides[dependency] = lambda: stub
+        installed.append(dependency)
 
-            async def check(self):
-                return not bool(request.param == routers.dependencies.get_email_sender)
+        return anonymous_client
 
-        client.app.dependency_overrides[request.param] = lambda: Deps()
-        yield client
+    yield install
+
+    for dependency in installed:
+        anonymous_client.app.dependency_overrides.pop(dependency, None)
 
 
 # ---- Payload fixtures ------------------------------------------------------
@@ -369,47 +374,57 @@ def test_public_route_works_for_anonymous_client(anonymous_client):
 # liveness/readiness
 
 
+class _DownStore:
+    """A Store whose health check reports the database unreachable"""
+
+    class health:
+        @staticmethod
+        async def get() -> bool:
+            return False
+
+
+class _DownEmailSender:
+    """An EmailSender whose check reports the provider unreachable"""
+
+    async def check(self) -> bool:
+        return False
+
+
 def test_liveness(anonymous_client):
     response = anonymous_client.get("/api/_health/live")
+
     assert response.status_code == 200
-    assert response.json()["status"] == "live"
+    assert response.json() == {"status": "live", "checks": {}}
 
 
 def test_readiness(anonymous_client):
     response = anonymous_client.get("/api/_health/ready")
+
     assert response.status_code == 200
-    assert response.json()["status"] == "ready"
+    assert response.json() == {"status": "ready", "checks": {"db": True, "email": True}}
 
 
 @pytest.mark.parametrize(
-    "dependency, status",
+    "dependency, stub, checks",
     [
-        (routers.dependencies.get_store, "not ready (db: False, email: True)"),
-        (routers.dependencies.get_email_sender, "not ready (db: True, email: False)"),
+        (routers.dependencies.get_store, _DownStore(), {"db": False, "email": True}),
+        (routers.dependencies.get_email_sender, _DownEmailSender(), {"db": True, "email": False}),
     ],
 )
-def test_anonymous_client_dependency_down(dependency, status):
-    with fastapi.testclient.TestClient(routers.app, base_url="https://testserver") as client:
+def test_readiness_reports_a_down_dependency(dependency_down, dependency, stub, checks):
+    # Only one dependency is overridden per case. The other stays real --
+    # MemoryStore and FileEmailSender both report healthy -- which is what makes
+    # the asymmetric `checks` assertion meaningful.
+    client = dependency_down(dependency, stub)
 
-        class NestedHealth:
-            def __init__(self, dependency):
-                self.dependency = dependency
+    response = client.get("/api/_health/ready")
 
-            async def get(self) -> bool:
-                # DB check is like this due to repository pattern
-                return not bool(self.dependency == routers.dependencies.get_store)
+    assert response.status_code == 503
+    assert response.json() == {"status": "not_ready", "checks": checks}
 
-        class Deps:
-            def __init__(self, dependency):
-                self.dependency = dependency
-                self.health = NestedHealth(dependency)
 
-            async def check(self) -> bool:
-                # Email's check is flatter
-                return not bool(self.dependency == routers.dependencies.get_email_sender)
+def test_readiness_is_healthy_after_an_override_test(anonymous_client):
+    """Guards the leak: a stale dependency_overrides entry used to poison this."""
+    response = anonymous_client.get("/api/_health/ready")
 
-        client.app.dependency_overrides[dependency] = lambda: Deps(dependency)
-
-        response = client.get("/api/_health/ready")
-        assert response.status_code == 503
-        assert response.json()["status"] == status
+    assert response.status_code == 200

@@ -1667,13 +1667,22 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "checks": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Checks",
+            "default": {}
           }
         },
         "type": "object",
         "required": [
           "status"
         ],
-        "title": "HealthResponse"
+        "title": "HealthResponse",
+        "description": "A health verdict, plus the per-dependency results behind it\n\nchecks is empty for liveness, which depends on nothing."
       },
       "ListStoredAgreements": {
         "properties": {

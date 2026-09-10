@@ -30,13 +30,17 @@ class SendGridEmailSender:
 
     async def check(self) -> bool:
         """
-        Check that the API key is valid by sending a test email to self
+        Report whether SendGrid is reachable with a valid API key
 
-        Raises EmailError if the key is invalid or the send fails for any reason
+        This calls a simple username.get to verify some connctivity without
+        sending an email or some other side-effect.
         """
-        response = await asyncio.to_thread(self._client.client.user.username.get())
+        try:
+            response = await asyncio.to_thread(self._client.client.user.username.get)
+        except Exception:  # noqa: BLE001
+            return False
 
-        return bool(response.status_code == 200)
+        return response.status_code == 200
 
     async def send(self, message: EmailMessage) -> None:
         mail_message = mail.Mail(

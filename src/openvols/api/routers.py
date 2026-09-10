@@ -9,7 +9,13 @@ from openvols.api import app, auth, dependencies
 
 
 class HealthResponse(pydantic.BaseModel):
+    """A health verdict, plus the per-dependency results behind it
+
+    checks is empty for liveness, which depends on nothing.
+    """
+
     status: str
+    checks: dict[str, bool] = {}
 
 
 @app.get("/api/_health/live", response_model=HealthResponse, status_code=200)
@@ -35,16 +41,13 @@ async def readiness(
         db_task = tg.create_task(store.health.get())
         email_task = tg.create_task(email.check())
 
-    db_state = db_task.result()
-    email_state = email_task.result()
-
-    if not all([db_state, email_state]):
+    checks = {"db": db_task.result(), "email": email_task.result()}
+    if not all(checks.values()):
         response.status_code = 503
-        return HealthResponse(status=f"not ready (db: {db_state}, email: {email_state})")
-    else:
-        return HealthResponse(status="ready")
 
-    return response
+        return HealthResponse(status="not_ready", checks=checks)
+
+    return HealthResponse(status="ready", checks=checks)
 
 
 class LoginEmail(pydantic.BaseModel):
