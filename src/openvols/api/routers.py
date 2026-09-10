@@ -18,16 +18,17 @@ class HealthResponse(pydantic.BaseModel):
     checks: dict[str, bool] = {}
 
 
-@app.get("/api/_health/live", response_model=HealthResponse, status_code=200)
+@app.get("/api/_health/live", response_model=HealthResponse)
 async def liveness(response: fastapi.Response):
     """Liveness check"""
     # Prevent callers from caching stale liveness responses
     response.headers["Cache-Control"] = "no-store"
+    response.status_code = 200
 
     return HealthResponse(status="live")
 
 
-@app.get("/api/_health/ready", response_model=HealthResponse, status_code=200)
+@app.get("/api/_health/ready", response_model=HealthResponse)
 async def readiness(
     response: fastapi.Response,
     store: dependencies.StoreDependency,
@@ -42,12 +43,15 @@ async def readiness(
         email_task = tg.create_task(email.check())
 
     checks = {"db": db_task.result(), "email": email_task.result()}
-    if not all(checks.values()):
+
+    if all(checks.values()):
+        response.status_code = 200
+        status = "ready"
+    else:
         response.status_code = 503
+        status = "not_ready"
 
-        return HealthResponse(status="not_ready", checks=checks)
-
-    return HealthResponse(status="ready", checks=checks)
+    return HealthResponse(status=status, checks=checks)
 
 
 class LoginEmail(pydantic.BaseModel):
