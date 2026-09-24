@@ -140,7 +140,10 @@ class _UserRepository:
         )
 
     async def create(self, item: models.User) -> models.StoredUser:
-        return await self._repository.create(item)
+        try:
+            return await self._repository.create(item)
+        except asyncpg.UniqueViolationError as exc:
+            raise data.ConflictError(f"a user with email {item.email!r} already exists") from exc
 
     async def get(self, id: int) -> models.StoredUser:
         return await self._repository.get(id)
@@ -149,20 +152,31 @@ class _UserRepository:
         return await self._repository.list()
 
     async def update(self, id: int, item: models.User) -> models.StoredUser:
-        return await self._repository.update(id, item)
+        try:
+            return await self._repository.update(id, item)
+        except asyncpg.UniqueViolationError as exc:
+            raise data.ConflictError(f"a user with email {item.email!r} already exists") from exc
+
+    async def get(self, id: int) -> models.StoredUser:
+        return await self._repository.get(id)
+
+    async def list(self) -> builtins.list[models.StoredUser]:
+        return await self._repository.list()
+
+    async def update(self, id: int, item: models.User) -> models.StoredUser:
+        try:
+            return await self._repository.update(id, item)
+        except asyncpg.UniqueViolationError as exc:
+            raise data.ConflictError(f"a user with email {item.email!r} already exists") from exc
 
     async def delete(self, id: int) -> None:
         await self._repository.delete(id)
 
     async def get_by_email(self, email: str) -> models.StoredUser:
-        """
-        Resolve a user by email address.
-
-        users.email has no uniqueness constraint yet, so "oldest wins" is the
-        defined tie-break for the rare case of duplicates.
-        """
+        """Resolve a user by email address, case-insensitively, as users_email_lower_key is"""
+        # lower(email) must match the index expression exactly for Postgres to use it.
         row = await self._store.pool.fetchrow(
-            "SELECT * FROM users WHERE email = $1 ORDER BY created LIMIT 1;", email
+            "SELECT * FROM users WHERE lower(email) = lower($1);", email
         )
 
         if row is None:

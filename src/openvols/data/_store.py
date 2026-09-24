@@ -107,6 +107,13 @@ class OrganizationRepository(
 
 
 class UserRepository(Repository[models.StoredUser, models.User], typing.Protocol):
+    """
+    Email addresses are unique across users, case-insensitively: create() and
+    update() raise ConflictError when the email already belongs to another
+    user, and get_by_email() matches regardless of case. The stored email
+    keeps the case it was given.
+    """
+
     async def get_by_email(self, email: str) -> models.StoredUser: ...
 
 
