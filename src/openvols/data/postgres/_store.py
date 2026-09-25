@@ -157,18 +157,6 @@ class _UserRepository:
         except asyncpg.UniqueViolationError as exc:
             raise data.ConflictError(f"a user with email {item.email!r} already exists") from exc
 
-    async def get(self, id: int) -> models.StoredUser:
-        return await self._repository.get(id)
-
-    async def list(self) -> builtins.list[models.StoredUser]:
-        return await self._repository.list()
-
-    async def update(self, id: int, item: models.User) -> models.StoredUser:
-        try:
-            return await self._repository.update(id, item)
-        except asyncpg.UniqueViolationError as exc:
-            raise data.ConflictError(f"a user with email {item.email!r} already exists") from exc
-
     async def delete(self, id: int) -> None:
         await self._repository.delete(id)
 
