@@ -316,3 +316,65 @@ async def test_user_get_by_email_round_trips(store):
 async def test_user_get_by_email_unknown_raises_not_found(store):
     with pytest.raises(NotFoundError):
         await store.users.get_by_email("nobody@example.org")
+
+
+async def test_user_create_duplicate_email_conflicts(store):
+    await store.users.create(_user("taken@example.org"))
+
+    with pytest.raises(ConflictError):
+        await store.users.create(_user("taken@example.org"))
+
+
+async def test_user_update_to_taken_email_conflicts(store):
+    await store.users.create(_user("taken@example.org"))
+    other = await store.users.create(_user("other@example.org"))
+
+    with pytest.raises(ConflictError):
+        await store.users.update(other.id, _user("taken@example.org"))
+
+    unchanged = await store.users.get(other.id)
+    assert unchanged.email == "other@example.org"
+
+
+async def test_user_update_keeping_own_email_succeeds(store):
+    user = await store.users.create(_user("mine@example.org"))
+
+    renamed = _user("mine@example.org").model_copy(update={"first_name": "Janet"})
+    updated = await store.users.update(user.id, renamed)
+
+    assert updated.first_name == "Janet"
+    assert updated.email == "mine@example.org"
+
+
+async def test_user_email_is_reusable_after_delete(store):
+    user = await store.users.create(_user("reused@example.org"))
+    await store.users.delete(user.id)
+
+    recreated = await store.users.create(_user("reused@example.org"))
+
+    fetched = await store.users.get_by_email("reused@example.org")
+    assert fetched.id == recreated.id
+
+
+async def test_user_create_duplicate_email_differing_case_conflicts(store):
+    await store.users.create(_user("taken@example.org"))
+
+    with pytest.raises(ConflictError):
+        await store.users.create(_user("Taken@example.org"))
+
+
+async def test_user_update_changing_own_email_case_succeeds(store):
+    user = await store.users.create(_user("mine@example.org"))
+
+    updated = await store.users.update(user.id, _user("Mine@example.org"))
+
+    assert updated.email == "Mine@example.org"
+
+
+async def test_user_get_by_email_ignores_case(store):
+    user = await store.users.create(_user("Lookup@example.org"))
+
+    fetched = await store.users.get_by_email("lookup@EXAMPLE.org")
+
+    assert fetched.id == user.id
+    assert fetched.email == "Lookup@example.org"
