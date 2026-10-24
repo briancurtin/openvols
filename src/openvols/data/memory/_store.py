@@ -77,6 +77,8 @@ class _UserRepository:
         self._repository = _InMemoryRepository(models.StoredUser)
 
     async def create(self, item: models.User) -> models.StoredUser:
+        await self._ensure_email_available(item.email)
+
         return await self._repository.create(item)
 
     async def get(self, id: int) -> models.StoredUser:
@@ -86,23 +88,27 @@ class _UserRepository:
         return await self._repository.list()
 
     async def update(self, id: int, item: models.User) -> models.StoredUser:
+        await self._repository.get(id)
+        await self._ensure_email_available(item.email, exclude_id=id)
+
         return await self._repository.update(id, item)
 
     async def delete(self, id: int) -> None:
         await self._repository.delete(id)
 
     async def get_by_email(self, email: str) -> models.StoredUser:
-        """
-        Resolve a user by email address.
+        """Resolve a user by email address, case-insensitively, as create/update keep it unique"""
+        for user in await self._repository.list():
+            if user.email.lower() == email.lower():
+                return user
 
-        users.email has no uniqueness constraint yet, so "oldest wins" is the
-        defined tie-break for the rare case of duplicates.
-        """
-        matches = [user for user in await self._repository.list() if user.email == email]
-        if not matches:
-            raise data.NotFoundError("StoredUser", email)
+        raise data.NotFoundError("StoredUser", email)
 
-        return min(matches, key=lambda user: user.created)
+    async def _ensure_email_available(self, email: str, exclude_id: int | None = None) -> None:
+        """Mirror Postgres' users_email_lower_key index, so both backends conflict alike"""
+        for user in await self._repository.list():
+            if user.email.lower() == email.lower() and user.id != exclude_id:
+                raise data.ConflictError(f"a user with email {email!r} already exists")
 
 
 class _RoleRepository:

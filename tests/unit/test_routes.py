@@ -228,13 +228,36 @@ def test_update(client, request, resource, body_fixture):
     assert response.json()["id"] == created["id"]
 
 
+def test_create_user_duplicate_email_conflicts(client):
+    response = client.post("/api/users", json=_LOGIN_USER_BODY)
+
+    assert response.status_code == 409
+
+
+def test_create_user_duplicate_email_differing_case_conflicts(client):
+    body = {**_LOGIN_USER_BODY, "email": "LOGIN@example.org"}
+
+    response = client.post("/api/users", json=body)
+
+    assert response.status_code == 409
+
+
+def test_update_user_to_taken_email_conflicts(client, user_id, user_body):
+    body = {**user_body, "email": _LOGIN_USER_BODY["email"]}
+
+    response = client.patch(f"/api/users/{user_id}", json=body)
+
+    assert response.status_code == 409
+
+
 # ---- Participants / registration engine -------------------------------------
 
 
 @pytest.fixture
 def registered_participant(client, user_body, opportunity_body):
     """Create a user and an opportunity, then register the user for it."""
-    user = client.post("/api/users", json=user_body).json()
+    # opportunity_body's contact already owns user_body's email.
+    user = client.post("/api/users", json={**user_body, "email": "participant@example.org"}).json()
     opportunity = client.post("/api/opportunities", json=opportunity_body).json()
 
     response = client.post(
@@ -285,7 +308,7 @@ def test_registration_waitlists_over_capacity(client, user_body, opportunity_bod
     opportunity_body = {**opportunity_body, "capacity": 1}
     opportunity = client.post("/api/opportunities", json=opportunity_body).json()
 
-    first_user = client.post("/api/users", json=user_body).json()
+    first_user = client.post("/api/users", json={**user_body, "email": "first@example.org"}).json()
     second_user = client.post(
         "/api/users", json={**user_body, "email": "second@example.org"}
     ).json()
